@@ -49,7 +49,10 @@ def chat():
 
 @app.route('/interventions')
 def interventions():
-    return render_template('interventions.html')
+    disease = request.args.get('disease', 'parkinsons')
+    if disease not in {'alzheimers', 'parkinsons', 'huntingtons'}:
+        return jsonify({'error': 'Choose Alzheimer’s, Parkinson’s, or Huntington’s disease.'}), 400
+    return render_template('interventions.html', selected_disease=disease)
 
 @app.route('/questions')
 def questions():

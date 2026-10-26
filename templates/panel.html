@@ -38,7 +38,7 @@
     <nav class="sidebar-links" aria-label="Workspace">
         <a href="{{ url_for('landing') }}" class="{{ 'active' if request.endpoint == 'landing' else '' }}"><span class="sidebar-icon" aria-hidden="true">⌂</span>Landing page</a>
         <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}"><span class="sidebar-icon" aria-hidden="true">◫</span>Dashboard</a>
-        <a href="{{ url_for('interventions') }}" class="{{ 'active' if request.endpoint == 'interventions' else '' }}"><span class="sidebar-icon" aria-hidden="true">✚</span>Care guide</a>
+        <a id="care-guide-link" href="{{ url_for('interventions', disease=selected_disease) if request.endpoint == 'home' else url_for('interventions') }}" class="{{ 'active' if request.endpoint == 'interventions' else '' }}"><span class="sidebar-icon" aria-hidden="true">✚</span>Care guide</a>
         <a href="{{ url_for('questions') }}" class="{{ 'active' if request.endpoint == 'questions' else '' }}"><span class="sidebar-icon" aria-hidden="true">?</span>Results Q&amp;A</a>
         {% if request.endpoint != 'interventions' %}<a href="{{ url_for('chat') }}" class="{{ 'active' if request.endpoint == 'chat' else '' }}"><span class="sidebar-icon" aria-hidden="true">✧</span>AI assistant</a>{% endif %}
     </nav>
