@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeuroQuant | Progression Trend Explorer</title>
+    <script>
+        try {
+            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
+            document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
+        } catch { /* Keep the default appearance when storage is unavailable. */ }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -74,6 +81,11 @@
         .disease-picker legend { margin-bottom: 10px; color: #d1d5db; font-size: 13px; font-weight: 700; }
         .disease-option { min-height: 58px; padding: 12px 14px; text-align: left; border: 1px solid #33464b; border-radius: 12px; color: #dce9e4; background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); cursor: pointer; }
         .disease-option[aria-pressed="true"] { border-color: #95e3c1; background: rgba(54, 119, 91, .28); box-shadow: 0 0 0 1px rgba(149,227,193,.18), inset 0 1px rgba(255,255,255,.1); color: #b6f0d4; }
+        .disease-option { display:flex; flex-direction:column; justify-content:center; gap:5px; min-height:76px; transition:background .18s ease,border-color .18s ease,transform .18s ease; }
+        .disease-option:hover { border-color:rgba(149,227,193,.5); transform:translateY(-1px); }
+        .disease-option-title { font-size:14px; font-weight:750; }
+        .disease-option-action { color:#a5b8b7; font-size:11px; }
+        .disease-option[aria-pressed="true"] .disease-option-action { color:#b6f0d4; }
         .disease-option:focus-visible { outline: 2px solid #95e3c1; outline-offset: 2px; }
         .disease-overview { margin-top: 18px; padding: 18px; border: 1px solid rgba(207,255,235,.16); border-radius: 14px; background: rgba(10,22,27,.48); }
         .disease-overview h3 { margin: 0 0 12px; color: #95e3c1; }
@@ -126,6 +138,17 @@
         .brain-controls input:disabled { opacity: .4; }
         .brain-views button { padding: 4px 10px; margin-right: 4px; font-size: 12px; color: #f8e9df; background: #49333a; border: 1px solid #96636b; border-radius: 6px; cursor: pointer; }
         .brain-views button:hover { background: #5c3f4a; }
+        .region-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 18px 0; }
+        .region-picker button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; font-size: 12px; color: #d8e5e0; background: #142129; border: 1px solid #263840; border-radius: 999px; cursor: pointer; }
+        .region-picker button:hover { border-color: #548c73; }
+        .region-picker button[aria-pressed="true"] { color: #1d1a0d; background: #ffe08a; border-color: #ffe08a; }
+        .region-picker i { width: 8px; height: 8px; border-radius: 50%; }
+        .region-info { margin: 12px 18px 18px; padding: 14px 16px; border: 1px solid rgba(207,255,235,.14); border-radius: 12px; background: rgba(9,19,25,.45); color: #d8e5e0; font-size: 13px; line-height: 1.65; }
+        .region-info h3 { margin: 0 0 4px; font-size: 15px; color: #95e3c1; }
+        .region-info h4 { margin: 10px 0 2px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #97a9ad; }
+        .region-info p { margin: 0; }
+        .region-info .region-source { margin-top: 10px; font-size: 11px; color: #8a9da1; }
+        .region-info a { color: #95e3c1; }
         .brain-note { margin: 8px 18px 12px; font-size: 13px; color: #c9bdc0; }
         .simulator, .trend-workspace { margin-top: 20px; padding: 20px; }
         .simulator-header { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
@@ -153,17 +176,59 @@
         .trend-output .metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         .trend-output .metric-card { padding:13px; }
         .trend-output .metric-value { font-size:22px; }
+        .trend-layout { display:block; }
+        .trend-inputs { grid-template-columns:minmax(260px,.82fr) minmax(0,1.18fr); gap:16px; align-items:start; }
+        .score-controls-panel { display:grid; min-width:0; gap:9px; }
+        .clinical-chart-panel { min-width:0; margin:0; }
+        .trend-output { display:grid; gap:16px; margin-top:18px; }
+        .trend-output .metrics-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .measure-section-heading { margin:20px 0 12px; }
+        .measure-section-heading h3 { margin:4px 0 6px; color:#e3f1ec; font-size:18px; }
+        .measure-section-heading p { margin:0; }
+        .biomarker-section { padding:16px; border:1px solid rgba(207,255,235,.12); border-radius:14px; background:rgba(9,20,26,.23); }
+        .biomarker-section .measure-section-heading { margin:0 0 12px; }
+        .biomarker-workspace { display:grid; grid-template-columns:minmax(260px,.9fr) minmax(0,1.1fr); gap:16px; align-items:start; }
+        .biomarker-workspace > .combined-measure-inputs,
+        .biomarker-workspace > .combined-trend-figure { min-width:0; margin:0; }
+        .biomarker-workspace .combined-measure-inputs h4 { margin:0 0 10px; color:#e3f1ec; font-size:14px; }
+        .feature-summary-card { margin:12px 0 8px; padding:11px 13px !important; }
+        .feature-summary-card .metric-value { margin-top:3px; font-size:20px; }
+        .trend-more-info { display:grid; gap:14px; margin-top:16px; }
         .trend-chart { height:350px; padding:10px; border:1px solid rgba(207,255,235,.1); border-radius:15px; background:rgba(9,19,25,.3); }
-        .combined-measure-inputs, .combined-trend-figure { margin-top:18px; padding:16px; border:1px solid rgba(207,255,235,.12); border-radius:14px; background:rgba(9,20,26,.32); }
-        .combined-measure-inputs h3, .combined-trend-figure h3 { margin:0 0 8px; color:#e3f1ec; font-size:15px; }
+        .combined-measure-inputs, .combined-trend-figure { margin-top:16px; padding:16px; border:1px solid rgba(207,255,235,.12); border-radius:14px; background:rgba(9,20,26,.32); }
+        .combined-measure-inputs h3, .combined-trend-figure h3 { margin:0 0 8px; color:#e3f1ec; font-size:16px; }
+        .combined-measure-inputs > p, .combined-trend-figure > p { max-width:75ch; }
         .combined-trend-figure > p { margin-bottom:14px; }
+        .change-review[data-level="rising"] { border-color:#b87524; border-left-color:#f2a541; background:rgba(242,165,65,.1); }
+        .change-review[data-level="falling"] { border-color:#4382a3; border-left-color:#78c5e7; background:rgba(120,197,231,.09); }
+        .change-review[data-level="unchanged"] { border-color:#52616a; border-left-color:#82949c; background:rgba(110,130,140,.1); }
+        .change-review[data-level^="hd-"] { border-left-width:5px; }
+        .change-review[data-level="hd-small-rise"] { border-color:#4382a3; border-left-color:#78c5e7; background:rgba(120,197,231,.09); }
+        .change-review[data-level="hd-moderate-rise"] { border-color:#b87524; border-left-color:#f2a541; background:rgba(242,165,65,.1); }
+        .change-review[data-level="hd-large-rise"] { border-color:#b94444; border-left-color:#ef5555; background:rgba(239,85,85,.12); }
+        .change-review[data-level="hd-small-fall"], .change-review[data-level="hd-moderate-fall"], .change-review[data-level="hd-large-fall"] { border-color:#4382a3; border-left-color:#78c5e7; background:rgba(120,197,231,.09); }
+        .metric-card[data-change-level="rising"] { border-color:rgba(242,165,65,.55); }
+        .metric-card[data-change-level="rising"] #risk-category { color:#f2b65e; }
+        .metric-card[data-change-level="falling"] { border-color:rgba(120,197,231,.5); }
+        .metric-card[data-change-level="falling"] #risk-category { color:#91d2ed; }
+        .metric-card[data-change-level="unchanged"] { border-color:rgba(130,148,156,.5); }
+        .metric-card[data-change-level="unchanged"] #risk-category { color:#bdc9cd; }
+        .metric-card[data-change-level="hd-small-rise"] { border-color:rgba(120,197,231,.58); }
+        .metric-card[data-change-level="hd-small-rise"] #risk-category { color:#91d2ed; }
+        .metric-card[data-change-level="hd-moderate-rise"] { border-color:rgba(242,165,65,.6); }
+        .metric-card[data-change-level="hd-moderate-rise"] #risk-category { color:#f2b65e; }
+        .metric-card[data-change-level="hd-large-rise"] { border-color:rgba(239,85,85,.65); }
+        .metric-card[data-change-level="hd-large-rise"] #risk-category { color:#ff7777; }
+        .metric-card[data-change-level^="hd-"][data-change-level$="-fall"] { border-color:rgba(120,197,231,.58); }
+        .metric-card[data-change-level^="hd-"][data-change-level$="-fall"] #risk-category { color:#91d2ed; }
         .trend-status { min-height:24px; color:#a7d7c2; font-size:12px; line-height:1.5; }
         .treatment-note, .treatment-reference { padding:13px 14px; border:1px solid rgba(207,255,235,.12); border-radius:12px; color:#b6c9c3; background:rgba(9,20,26,.42); font-size:12px; line-height:1.65; }
         .treatment-note strong, .treatment-reference strong { color:#e9f5f0; }
         .treatment-note a, .treatment-reference a { color:#a9e7cb; text-decoration:underline; text-underline-offset:2px; }
         .treatment-reference { margin-top:12px; border-color:rgba(149,227,193,.24); }
-        @media (max-width: 980px) { .trend-layout { grid-template-columns:1fr; } }
-        @media (max-width: 700px) { .trend-output .metrics-grid { grid-template-columns:1fr; } .trend-chart { height:250px; } }
+        @media (max-width: 980px) { .trend-inputs, .biomarker-workspace { grid-template-columns:1fr; } }
+        @media (max-width: 700px) { .trend-output .metrics-grid { grid-template-columns:1fr; } .trend-chart { height:250px; } .disease-picker { gap:8px; } }
+        @media (max-width: 420px) { .trend-workspace { padding:14px; } .combined-measure-inputs, .combined-trend-figure { padding:13px; } .range-control label { align-items:flex-start; flex-direction:column; gap:3px; } }
         .intervention-control { margin:12px 0; }
         .intervention-control label { display:flex; justify-content:space-between; gap:12px; margin-bottom:6px; color:#d5e2de; font-size:12px; }
         .intervention-control output { color:#95e3c1; font-weight:700; }
@@ -175,6 +240,10 @@
         .evidence-links a { color:#a9dcc6; text-decoration:underline; text-underline-offset:2px; }
         .genomics select { width:100%; margin:9px 0; padding:10px; border:1px solid #263840; border-radius:7px; color:#edf5f2; background:#111b24; }
         .variant-description { min-height:68px; color:#a6b8b4; font-size:12px; line-height:1.65; }
+        .variant-traits { display:grid; gap:8px; margin-top:12px; }
+        .variant-trait { padding:10px 12px; border:1px solid rgba(207,255,235,.12); border-radius:9px; background:rgba(9,20,26,.25); }
+        .variant-trait strong { display:block; margin-bottom:3px; color:#95e3c1; font-size:11px; }
+        .variant-trait span { color:#c7d5d0; font-size:12px; line-height:1.55; }
         .variant-tag { display:inline-block; margin:4px 5px 0 0; padding:4px 8px; border:1px solid #335448; border-radius:99px; color:#b3e8ce; background:#142720; font-size:10px; }
         .simulator-warning { padding:10px 12px; border-left:2px solid #87c7ad; color:#adc0bb; background:rgba(149,227,193,.045); font-size:11px; line-height:1.6; }
         @media (max-width: 800px) { .simulator-grid,.genomics-grid { grid-template-columns:1fr; } }
@@ -206,18 +275,24 @@
         <div>
             <div class="neuro-eyebrow">Progression outlook</div>
             <h2 id="progression-title">Score and test-result overview</h2>
-            <p class="neuro-small">Choose a condition, enter named test scores and any available report values, and review each measure on its own graph. Select a measure below for a plain-language definition.</p>
+            <p class="neuro-small">Choose one of the condition buttons below. Compare clinical score reports in the first section, then add optional biomarkers or other report results in the second.</p>
         </div>
         <span class="variant-tag">Not a clinical prediction</span>
     </div>
     <fieldset class="disease-picker" aria-label="Choose disease workflow">
         <legend>Choose a disease</legend>
-        <button class="disease-option" type="button" data-disease-option="alzheimers" aria-pressed="{{ 'true' if selected_disease == 'alzheimers' else 'false' }}">Alzheimer’s disease</button>
-        <button class="disease-option" type="button" data-disease-option="parkinsons" aria-pressed="{{ 'true' if selected_disease == 'parkinsons' else 'false' }}">Parkinson’s disease</button>
-        <button class="disease-option" type="button" data-disease-option="huntingtons" aria-pressed="{{ 'true' if selected_disease == 'huntingtons' else 'false' }}">Huntington’s disease</button>
+        <button class="disease-option" type="button" data-disease-option="alzheimers" aria-pressed="{{ 'true' if selected_disease == 'alzheimers' else 'false' }}"><span class="disease-option-title">Alzheimer’s disease</span><span class="disease-option-action">{{ 'Selected' if selected_disease == 'alzheimers' else 'Choose this condition →' }}</span></button>
+        <button class="disease-option" type="button" data-disease-option="parkinsons" aria-pressed="{{ 'true' if selected_disease == 'parkinsons' else 'false' }}"><span class="disease-option-title">Parkinson’s disease</span><span class="disease-option-action">{{ 'Selected' if selected_disease == 'parkinsons' else 'Choose this condition →' }}</span></button>
+        <button class="disease-option" type="button" data-disease-option="huntingtons" aria-pressed="{{ 'true' if selected_disease == 'huntingtons' else 'false' }}"><span class="disease-option-title">Huntington’s disease</span><span class="disease-option-action">{{ 'Selected' if selected_disease == 'huntingtons' else 'Choose this condition →' }}</span></button>
     </fieldset>
+    <div class="measure-section-heading">
+        <span class="neuro-eyebrow">Section 1 · Clinical score</span>
+        <h3>Compare two score reports</h3>
+        <p class="neuro-small">Enter the same assessment score from two reports. The chart and score summary are shown beside your entries on laptop screens and below them on phones.</p>
+    </div>
     <div class="trend-layout">
         <div class="trend-inputs">
+            <div class="score-controls-panel">
             <p class="neuro-small" id="scale-note"></p>
             <p class="neuro-small">Use the same assessment scale and similar testing conditions for both reports. No scores are prefilled as patient measurements.</p>
             <div class="range-control">
@@ -252,7 +327,15 @@
                 <button class="secondary" id="save-trend" type="button" disabled>Save trend</button>
                 <button class="secondary" id="download-trend" type="button" disabled>Download report</button>
             </div>
+            <button class="secondary" id="prepare-care-brief" type="button">Use these entries in a care discussion brief</button>
             <p class="trend-status" id="simulator-validation" role="status" aria-live="polite">Enter values from both clinical score reports to draw the score line. Feature values can be graphed separately.</p>
+            </div>
+            <section class="combined-trend-figure clinical-chart-panel" id="clinical-trend-figure" aria-labelledby="clinical-chart-title">
+                <h3 id="clinical-chart-title">Clinical score trend</h3>
+                <p class="neuro-small" id="clinical-chart-description">This graph shows the selected score’s change from your most recent report, as a percentage of the score’s full range. It is a normalized score trend—not a percentage of neuron loss.</p>
+                <div class="trend-chart"><canvas id="simulatorChart" aria-label="Normalized clinical score change over time"></canvas></div>
+                <p class="neuro-small" id="clinical-index-summary" aria-live="polite">Enter both score values to see the graph.</p>
+            </section>
         </div>
         <div class="trend-output">
             <div class="metrics-grid">
@@ -261,37 +344,43 @@
                 <div class="metric-card"><div class="metric-title">Score direction</div><div class="metric-value" id="trend-status">—</div><div class="metric-sub" id="trend-status-caption">Change between the two reports only</div></div>
                 <div class="metric-card"><div class="metric-title">Illustrative score at selected time</div><div class="metric-value" id="projected-score">—</div><div class="metric-sub" id="projection-caption">Straight-line extension, not a forecast</div></div>
                 <div class="metric-card"><div class="metric-title">Treatment comparison value</div><div class="metric-value" id="scenario-score">—</div><div class="metric-sub" id="scenario-caption">Group average shown only when available</div></div>
-                <div class="metric-card"><div class="metric-title">Average feature change per year</div><div class="metric-value" id="combined-index-rate">—</div><div class="metric-sub" id="combined-index-caption">Average change as % of app entry range</div></div>
-                <div class="metric-card"><div class="metric-title">Score-change band</div><div class="metric-value" id="risk-category">Not assessed</div><div class="metric-sub">A color-coded change estimate; not disease risk.</div></div>
+                <div class="metric-card" id="change-indicator-card"><div class="metric-title">Change classification</div><div class="metric-value" id="risk-category">Not assessed</div><div class="metric-sub">A score-change band or reference; not disease risk.</div></div>
             </div>
             <div class="change-review" id="change-review" data-level="neutral" role="status" aria-live="polite">
                 <strong id="change-review-title">No score change assessed yet</strong>
                 <p id="change-review-detail">Enter two scores from the same assessment scale. This prompt cannot measure neuron loss or determine personal risk.</p>
             </div>
-            <p class="risk-explanation"><strong>Important:</strong> The color bands are estimates of the entered score change, not a validated “high,” “moderate,” or “stable” neurodegeneration or personal risk rating. They do not measure neuron loss. Results can vary with disease stage, assessor, medication timing, test conditions, and time between reports. A clinician should interpret the result.</p>
-            <div class="combined-trend-figure" id="clinical-trend-figure">
-                <h3 id="clinical-chart-title">Your test-score change rate</h3>
-                <p class="neuro-small" id="clinical-chart-description">This graph shows the selected score’s change from your most recent report, as a percentage of the score’s full range. It is a normalized score trend—not a percentage of neuron loss.</p>
-                <div class="trend-chart"><canvas id="simulatorChart" aria-label="Normalized clinical score change over time"></canvas></div>
-                <p class="neuro-small" id="clinical-index-summary" aria-live="polite">Enter both score values to see the graph.</p>
-            </div>
-            <div class="combined-trend-figure" id="feature-trend-figure">
-                <h3>Other report results</h3>
-                <p class="neuro-small">Each colored line shows how one entered test result changed from the earlier report. The gold line shows the average size of those changes as a percentage of the app’s entry ranges. It is only a math summary, not a medical score or forecast.</p>
-                <div class="trend-chart"><canvas id="biomarkerChart" aria-label="Separate graph of entered biomarker and other measured feature changes"></canvas></div>
-                <p class="neuro-small" id="combined-index-summary" aria-live="polite">Enter earlier and recent values for at least one feature to see this graph and its exploratory index.</p>
-            </div>
-            <div class="combined-measure-inputs">
-                <h3>Enter test scores and report results</h3>
-                <p class="neuro-small" id="biomarker-intro"></p>
-                <div id="genetic-context-slider"></div>
-                <div class="biomarker-sliders" id="biomarker-slider-fields"></div>
-                <div class="range-control">
-                    <label for="biomarker-years">Time between <strong>feature reports</strong> <output id="biomarker-years-value">1.0 years</output></label>
-                    <input id="biomarker-years" type="range" min="0.1" max="10" step="0.1" value="1">
+            <p class="risk-explanation"><strong>How to read the colors:</strong> For Alzheimer’s and Parkinson’s, colors compare the entered score change with published clinical-change references. For Huntington’s, the band classifies the magnitude and direction of the observed annual score change using app-defined cutoffs: under 1%, 1–5%, or at least 5% of the 0–124 point scale per year. These bands are not clinically validated and do not indicate disease risk or neuron loss. Results vary with rater, exam conditions, and time between reports; a clinician should interpret them.</p>
+            <section class="biomarker-section" aria-labelledby="biomarker-section-title">
+                <div class="measure-section-heading">
+                    <span class="neuro-eyebrow">Section 2 · Other results</span>
+                    <h3 id="biomarker-section-title">Compare biomarkers and other report results</h3>
+                    <p class="neuro-small" id="biomarker-intro"></p>
                 </div>
-                <p class="biomarker-note" id="biomarker-note" aria-live="polite"></p>
-            </div>
+                <div class="biomarker-workspace">
+                    <div class="combined-measure-inputs">
+                        <h4>Enter results from two reports</h4>
+                        <div id="genetic-context-slider"></div>
+                        <div class="biomarker-sliders" id="biomarker-slider-fields"></div>
+                        <div class="range-control">
+                            <label for="biomarker-years">Time between <strong>result reports</strong> <output id="biomarker-years-value">1.0 years</output></label>
+                            <input id="biomarker-years" type="range" min="0.1" max="10" step="0.1" value="1">
+                        </div>
+                        <p class="biomarker-note" id="biomarker-note" aria-live="polite"></p>
+                    </div>
+                    <section class="combined-trend-figure" id="feature-trend-figure" aria-labelledby="feature-chart-title">
+                <h3 id="feature-chart-title">Other report results trend</h3>
+                <p class="neuro-small">Each colored line shows how one entered result changed from the earlier report. The gold line summarizes average change as a percentage of the app’s entry ranges; it is not a medical score or forecast.</p>
+                <div class="trend-chart"><canvas id="biomarkerChart" aria-label="Separate graph of entered report-result changes"></canvas></div>
+                <div class="feature-summary-card metric-card">
+                    <div class="metric-title">Average change per year</div>
+                    <div class="metric-value" id="combined-index-rate">—</div>
+                    <div class="metric-sub" id="combined-index-caption">Average change as % of app entry range</div>
+                </div>
+                <p class="neuro-small" id="combined-index-summary" aria-live="polite">Enter earlier and recent values for at least one result to see this graph and its exploratory index.</p>
+                    </section>
+                </div>
+            </section>
             <details class="measure-definitions">
                 <summary>Definitions of scores, tests, and graph terms</summary>
                 <dl id="measure-definitions"></dl>
@@ -316,12 +405,12 @@
 
         <section class="genomics neuro-card" id="genomics" aria-labelledby="genomics-title">
             <div class="simulator-header">
-                <div><div class="neuro-eyebrow">Genomic context</div><h3 id="genomics-title">Variant &amp; pathogenicity inspector</h3><p class="neuro-small">Explore established gene and variant context. Markers are schematic, not patient-specific brain findings.</p></div>
-                <span class="variant-tag">Qualitative overlay only</span>
+                <div><div class="neuro-eyebrow">Genetic education</div><h3 id="genomics-title">Variant context explorer</h3><p class="neuro-small">Review what a selected genotype or repeat-length range can mean in general. These are examples, not a patient test result.</p></div>
+                <span class="variant-tag">Not a genetic test</span>
             </div>
             <div class="genomics-grid">
                 <div>
-                    <label for="variantSelect">Research profile</label>
+                    <label for="variantSelect">Choose an example profile</label>
                     <select id="variantSelect">
                         <option value="none">No variant selected</option>
                         <option value="apoe-e3e3">APOE ε3/ε3</option>
@@ -329,19 +418,22 @@
                         <option value="apoe-e4e4">APOE ε4/ε4</option>
                         <option value="lrrk2-g2019s">LRRK2 p.Gly2019Ser</option>
                         <option value="gba-n409s">GBA1 p.Asn409Ser (legacy N370S)</option>
-                        <option value="prnp-mm">PRNP codon 129: Met/Met</option>
-                        <option value="prnp-mv">PRNP codon 129: Met/Val</option>
-                        <option value="prnp-vv">PRNP codon 129: Val/Val</option>
+                        <option value="htt-normal">HTT CAG repeat: 26 or fewer (typical range)</option>
+                        <option value="htt-intermediate">HTT CAG repeat: 27–35 (intermediate)</option>
+                        <option value="htt-reduced">HTT CAG repeat: 36–39 (reduced penetrance)</option>
+                        <option value="htt-full">HTT CAG repeat: 40 or more (highly penetrant range)</option>
                     </select>
                     <div><span class="variant-tag" id="variant-class">No overlay</span><span class="variant-tag" id="variant-regions">Template structures only</span></div>
+                    <div class="variant-traits" id="variant-traits" aria-live="polite"></div>
                 </div>
                 <div>
-                    <p class="variant-description" id="variantDescription" aria-live="polite">Select a profile to see a concise, population-dependent research summary. Codon 129 is a common polymorphism, not a pathogenic PRNP mutation by itself.</p>
-                    <p class="simulator-warning">The overlay is a schematic location marker only. Genotype does not establish focal structural vulnerability, tissue damage, or an individual brain scan; the marker is not a biological risk map. Genetic effects vary by exact variant, ancestry, age, and family context; seek qualified genetic counseling for personal results.</p>
+                    <p class="variant-description" id="variantDescription" aria-live="polite">Select an example to review the gene, associated features, inheritance context, and limits of interpretation.</p>
+                    <p class="simulator-warning">Selecting an example does not confirm that a person carries the genotype. Trait associations describe groups, not a prediction of an individual’s symptoms, age of onset, or brain findings. Personal results should be interpreted from a clinical laboratory report with a genetics professional.</p>
                     <p class="evidence-links">
-                        Sources: <a href="https://www.nia.nih.gov/health/alzheimers-causes-and-risk-factors/what-do-we-know-about-genes-and-alzheimers-disease" target="_blank" rel="noopener noreferrer">NIA: Alzheimer's genes</a> ·
-                        <a href="https://www.ncbi.nlm.nih.gov/books/NBK1208/" target="_blank" rel="noopener noreferrer">GeneReviews: Parkinson disease overview</a> ·
-                        <a href="https://www.ncbi.nlm.nih.gov/books/NBK1223/" target="_blank" rel="noopener noreferrer">GeneReviews: Genetic prion disease</a>
+                        Sources: <a href="https://medlineplus.gov/genetics/gene/apoe/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: APOE</a> ·
+                        <a href="https://medlineplus.gov/genetics/gene/lrrk2/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: LRRK2</a> ·
+                        <a href="https://medlineplus.gov/genetics/gene/gba1/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: GBA1</a> ·
+                        <a href="https://medlineplus.gov/genetics/condition/huntington-disease/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: Huntington disease</a>
                     </p>
                 </div>
             </div>
@@ -356,7 +448,7 @@
             <button type="button" id="component-pulse-toggle" aria-pressed="true">Pulse: on</button>
         </div>
         <p class="brain-note">
-            Generic template anatomy—not a patient scan. The graph does not alter this brain model, and genetic markers are schematic only.
+            Generic template anatomy—not a patient scan. Click a region on the brain (or choose one below) to see what it does and how it relates to the disease selected above. Cortical lobes are approximate divisions of the template; the graph does not alter this model, and genetic markers are schematic only.
         </p>
         <div class="brain-controls">
             <label><input type="checkbox" id="translucent-toggle"> Show internal structures</label>
@@ -369,6 +461,8 @@
             </span>
         </div>
         <div class="gl-container" style="height: 560px; width: 100%;" id="brain-3dplot"></div>
+        <div class="region-picker" id="region-picker" role="group" aria-label="Brain regions"></div>
+        <div class="region-info" id="region-info" aria-live="polite"></div>
     </div>
 </div>
 
@@ -526,13 +620,17 @@ function selectedDisease() {
 
 function selectDisease(disease) {
     document.querySelectorAll('[data-disease-option]').forEach(button => {
-        button.setAttribute('aria-pressed', String(button.dataset.diseaseOption === disease));
+        const selected = button.dataset.diseaseOption === disease;
+        button.setAttribute('aria-pressed', String(selected));
+        button.querySelector('.disease-option-action').textContent =
+            selected ? 'Selected' : 'Choose this condition →';
     });
     scoreInputsTouched.earlier = false;
     scoreInputsTouched.later = false;
     biomarkerInputsTouched = { earlier: false, later: false };
     updateTreatmentOptions();
     updateDiseaseInformation();
+    renderRegionInfo();
     clearTrendOutput();
     document.getElementById('simulator-validation').textContent = 'Enter the named score from both reports. Other report results are optional.';
 }
@@ -611,7 +709,7 @@ function renderMeasureDefinitions() {
         ['Illustrative score line', 'A straight-line extension of the entered score change. It does not account for future changes, and it is not a personal forecast.'],
         ['Feature change line', 'Each feature line shows its change from the earlier value as a percentage of the feature’s slider range. Different features have different underlying units, so the lines use this normalized display.'],
         ['Combined relative-change index', 'The mean of the absolute annual change percentages for the non-clinical features entered. Each percentage is calculated using the feature slider range. It excludes the clinical score and does not say whether a change is helpful or harmful.'],
-        ['Score-change band', 'For CDR-SB and original UPDRS Part III, the orange/red prompts compare the absolute increase between reports with published clinical-change references. The green prompt means only “below the selected reference”; it does not mean the condition is stable. These are not risk levels or neuron-loss estimates and may not apply to every person. No threshold is assigned here for the Huntington’s movement score.'],
+        ['Change indicator', 'For CDR-SB and original UPDRS Part III, the orange/red prompts compare the increase between reports with published clinical-change references. The green prompt means only “below the selected reference”; it does not mean the condition is stable. For the Huntington’s movement score, app-defined bands classify the magnitude of the annualized score change as under 1%, 1–5%, or at least 5% of the full scale per year, alongside its direction. These display bands are not clinically validated and are not risk levels or neuron-loss estimates.'],
         ['Age and report interval', 'Age is saved as context only and is not used in the calculations. The report interval is the time between the two dates; use the interval for the values you entered.'],
         ['Treatment comparison', 'Where available, the line shows an average score difference reported for a group receiving a treatment. It is included for context only and cannot estimate an individual result or recommend treatment.'],
         ['Points and percentages', 'Points belong to the named clinical score. Percentages in the feature summary are calculated from the app’s entry ranges; they are not laboratory units or a personal risk percentage.']
@@ -754,6 +852,46 @@ function collectBiomarkerReportValues() {
             intervalYears: gap
         };
     });
+}
+
+function prepareCareDiscussionBrief() {
+    const disease = selectedDisease();
+    const score = {
+        name: scaleInfo[disease].name,
+        earlier: scoreInputsTouched.earlier ? Number(document.getElementById('observed-start').value) : null,
+        later: scoreInputsTouched.later ? Number(document.getElementById('observed-latest').value) : null,
+        intervalYears: Number(document.getElementById('observation-years').value)
+    };
+    const results = collectBiomarkerReportValues().map(result => {
+        const measure = biomarkerSliders[disease].find(item => item.id === result.id);
+        return {
+            name: measure.label,
+            unit: measure.unit,
+            earlier: result.earlier,
+            later: result.later
+        };
+    }).filter(result => result.earlier !== null || result.later !== null);
+    const cagContext = document.getElementById('htt-cag-context');
+    const cagOutput = document.getElementById('htt-cag-context-value');
+    const snapshot = {
+        disease: diseaseNames[disease],
+        score,
+        results,
+        age: ageInputTouched ? Number(document.getElementById('patient-age').value) : null,
+        httCagRepeatCount: cagContext && cagOutput?.textContent !== 'Not entered' ? Number(cagContext.value) : null,
+        geneticProfileExample: document.getElementById('variantSelect').value,
+        geneticProfileLabel: variantProfiles[document.getElementById('variantSelect').value]?.label || 'No example selected',
+        geneticProfileMeaning: variantProfiles[document.getElementById('variantSelect').value]?.meaning || '',
+        preparedAt: new Date().toISOString()
+    };
+    try {
+        sessionStorage.setItem('neuroquant.care-discussion-inputs.v1', JSON.stringify(snapshot));
+        window.location.href = '/interventions';
+    } catch (error) {
+        document.getElementById('simulator-validation').textContent =
+            'Could not prepare the local discussion brief. Check browser storage settings and try again.';
+        console.error('Could not save dashboard entries for the local care discussion brief.', error);
+    }
 }
 
 function restoreBiomarkerReportValues(values, interval) {
@@ -975,6 +1113,7 @@ function clearTrendOutput() {
     document.getElementById('scenario-score').textContent = '—';
     document.getElementById('trend-status').textContent = '—';
     document.getElementById('risk-category').textContent = 'Not assessed';
+    delete document.getElementById('change-indicator-card').dataset.changeLevel;
     document.getElementById('change-review').dataset.level = 'neutral';
     document.getElementById('change-review-title').textContent = 'No score change assessed yet';
     document.getElementById('change-review-detail').textContent = 'Enter two scores from the same assessment scale. This prompt cannot measure neuron loss or determine personal risk.';
@@ -1003,9 +1142,24 @@ function updateScoreChangeReview(disease, earlier, later) {
     box.dataset.level = 'neutral';
 
     if (disease === 'huntingtons') {
-        title.textContent = 'No validated change threshold available for this score';
-        detail.textContent = `The entered movement score changed by ${change > 0 ? '+' : ''}${change.toFixed(1)} points (${annualizedChange > 0 ? '+' : ''}${annualizedChange.toFixed(2)} points per year). This app does not classify this change as stable, moderate, high, or neurodegeneration risk. Please review score changes with the treating clinician.`;
-        level.textContent = 'Not classified';
+        const normalizedRate = Math.abs(annualizedChange) / scaleInfo.huntingtons.maximum * 100;
+        const direction = Math.abs(change) <= 0.01 ? 'unchanged' : change > 0 ? 'rise' : 'fall';
+        const magnitude = normalizedRate < 1 ? 'small' : normalizedRate < 5 ? 'moderate' : 'large';
+        const classification = direction === 'unchanged' ? 'unchanged' : `hd-${magnitude}-${direction}`;
+        box.dataset.level = classification;
+        const indicatorCard = document.getElementById('change-indicator-card');
+        if (direction === 'unchanged') {
+            delete indicatorCard.dataset.changeLevel;
+        } else {
+            indicatorCard.dataset.changeLevel = classification;
+        }
+        title.textContent = direction === 'unchanged'
+            ? 'No clear movement-score change'
+            : `${magnitude[0].toUpperCase()}${magnitude.slice(1)} ${direction === 'rise' ? 'increase' : 'decrease'} in movement score`;
+        detail.textContent = `Entered change: ${change > 0 ? '+' : ''}${change.toFixed(1)} points (${annualizedChange > 0 ? '+' : ''}${annualizedChange.toFixed(2)} points per year; ${normalizedRate.toFixed(2)}% of the full scale per year). Classification: ${magnitude} ${direction === 'rise' ? 'increase' : direction === 'fall' ? 'decrease' : 'change'} by the app’s display bands (<1%, 1–5%, ≥5%). These cutoffs are exploratory, not clinically validated; they do not indicate disease risk, prognosis, or neuron loss. Review score changes with the treating clinician.`;
+        level.textContent = direction === 'unchanged'
+            ? 'No clear change'
+            : `${magnitude[0].toUpperCase()}${magnitude.slice(1)} ${direction === 'rise' ? 'increase' : 'decrease'} · app-defined`;
         return;
     }
 
@@ -1386,48 +1540,83 @@ function downloadHistoryCsv() {
 const variantProfiles = {
     none: {
         label: 'No overlay', regions: [], tint: '#95e3c1',
-        summary: 'Select a profile to see a concise, population-dependent research summary. Codon 129 is a common polymorphism, not a pathogenic PRNP mutation by itself.',
-        tags: 'Template structures only'
+        summary: 'No example genotype is selected. Nothing here determines a person’s genetic status.',
+        tags: 'No overlay',
+        traits: [],
+        inheritance: 'No inheritance pattern selected.',
+        meaning: 'A selected example is educational only and is not a patient test result.'
     },
     'apoe-e3e3': {
-        label: 'Common genotype', regions: [], tint: '#8dd9c2',
-        summary: 'APOE ε3/ε3 is the common reference genotype in many populations. It does not rule out Alzheimer disease or determine an individual outcome.',
-        tags: 'No risk-allele overlay'
+        label: 'Common APOE genotype', regions: [], tint: '#8dd9c2',
+        summary: 'APOE ε3/ε3 is a common genotype; it neither rules out Alzheimer disease nor predicts a person’s outcome.',
+        tags: 'No overlay',
+        traits: ['APOE ε3 is the most common allele in many populations.'],
+        inheritance: 'APOE-related late-onset Alzheimer disease association is a susceptibility effect, not a simple Mendelian diagnosis.',
+        meaning: 'If this genotype appears on a verified report, it does not exclude Alzheimer disease and does not establish that symptoms are absent or present.'
     },
     'apoe-e3e4': {
-        label: 'Risk-associated allele', regions: ['hippocampus', 'cortex'], tint: '#9cdbc0',
-        summary: 'One APOE ε4 allele is associated with increased late-onset Alzheimer disease risk, but is neither necessary nor sufficient for disease. Risk estimates vary across ancestry and other factors.',
-        tags: 'Hippocampus · cortex'
+        label: 'One APOE ε4 allele', regions: [], tint: '#9cdbc0',
+        summary: 'One ε4 copy is associated with increased late-onset Alzheimer disease risk at a population level; it is not a diagnosis.',
+        tags: 'No brain overlay',
+        traits: ['Associated condition: late-onset Alzheimer disease; APOE ε4 increases population-level probability but does not predict whether this person will develop it.', 'APOE ε4 is also associated with dementia with Lewy bodies and altered lipid transport; neither association predicts an individual’s symptoms.'],
+        inheritance: 'APOE alleles are inherited from both biological parents. APOE ε4 is a susceptibility allele, not a deterministic autosomal-dominant Alzheimer variant.',
+        meaning: 'A verified ε3/ε4 result may inform a clinician discussion, but cannot tell whether this person will develop Alzheimer disease, when symptoms could begin, or how the disease would progress.'
     },
     'apoe-e4e4': {
-        label: 'Two risk-associated alleles', regions: ['hippocampus', 'cortex'], tint: '#afd9b6',
-        summary: 'APOE ε4/ε4 is associated with higher Alzheimer disease risk than one ε4 copy, but remains a risk genotype rather than a deterministic diagnosis. Population-specific counseling is important.',
-        tags: 'Hippocampus · cortex'
+        label: 'Two APOE ε4 alleles', regions: [], tint: '#afd9b6',
+        summary: 'Two ε4 copies are associated with a higher Alzheimer disease probability than one copy in studied populations, but do not make this a clinical diagnosis.',
+        tags: 'No brain overlay',
+        traits: ['Associated condition: late-onset Alzheimer disease; two ε4 copies are associated with higher population-level probability than one copy.', 'APOE ε4 is also associated with dementia with Lewy bodies and altered lipid transport; the strength and meaning of these associations vary, and this tool calculates no personal risk.'],
+        inheritance: 'One APOE allele is inherited from each biological parent. APOE ε4/ε4 remains a susceptibility genotype, not a deterministic diagnosis.',
+        meaning: 'A verified ε4/ε4 result should be discussed with a qualified clinician or genetic counselor. It cannot diagnose disease, explain symptoms by itself, or predict onset or course.'
     },
     'lrrk2-g2019s': {
-        label: 'Pathogenic variant', regions: ['caudate', 'putamen', 'pallidum'], tint: '#8ec6e1',
-        summary: 'LRRK2 p.Gly2019Ser is a pathogenic variant associated with autosomal-dominant Parkinson disease; penetrance is incomplete and varies with age and ancestry.',
-        tags: 'Caudate · putamen · pallidum'
+        label: 'LRRK2 p.Gly2019Ser example', regions: [], tint: '#8ec6e1',
+        summary: 'LRRK2 p.Gly2019Ser (G2019S) is associated with Parkinson disease; frequency and risk differ by ancestry and family background.',
+        tags: 'No brain overlay',
+        traits: ['Associated condition: Parkinson disease, which can involve slowness of movement, rigidity, resting tremor, and balance problems; a carrier may have different features or no symptoms.', 'A variant can be present without current symptoms; this profile cannot estimate whether or when disease develops.'],
+        inheritance: 'LRRK2-associated Parkinson disease can follow an autosomal-dominant family pattern, but penetrance is incomplete and varies.',
+        meaning: 'Only a clinical laboratory report can establish whether a person carries G2019S. A positive result does not mean that symptoms are inevitable or establish a diagnosis; discuss family implications with genetics care.'
     },
     'gba-n409s': {
-        label: 'Parkinson risk variant', regions: ['caudate', 'putamen', 'pallidum'], tint: '#89c9df',
-        summary: 'GBA1 p.Asn409Ser (legacy N370S) is a pathogenic Gaucher-disease variant and is also associated with increased Parkinson disease risk in carriers. A single copy does not mean Parkinson disease will occur.',
-        tags: 'Caudate · putamen · pallidum'
+        label: 'GBA1 p.Asn409Ser example', regions: [], tint: '#89c9df',
+        summary: 'GBA1 p.Asn409Ser (legacy p.Asn370Ser/N370S) is associated with Gaucher disease when disease-causing variants affect both copies, and with increased Parkinson disease probability in carriers.',
+        tags: 'No brain overlay',
+        traits: ['Two disease-causing GBA1 variants can cause Gaucher disease, which may affect the spleen, liver, blood counts, and bones; the exact features depend on the person and variant combination.', 'One GBA1 risk variant is associated with increased Parkinson disease probability but does not predict that a carrier will develop it.'],
+        inheritance: 'Gaucher disease is typically autosomal recessive. Parkinson disease risk associated with GBA1 is a susceptibility association, not a deterministic Mendelian prediction.',
+        meaning: 'Variant classification and whether one or both copies are affected must come from the exact laboratory report. This example cannot establish carrier status, Gaucher disease, or Parkinson disease.'
     },
-    'prnp-mm': {
-        label: 'Common polymorphism', regions: ['cortex', 'brainstem'], tint: '#c8a9e8',
-        summary: 'PRNP codon 129 Met/Met is a common polymorphism that can modify susceptibility or phenotype in prion disease contexts; it is not a pathogenic mutation on its own.',
-        tags: 'Cortex · brainstem (schematic)'
+    'htt-normal': {
+        label: 'HTT: 26 or fewer repeats', regions: [], tint: '#e8b86a',
+        summary: 'A verified HTT allele with 26 or fewer CAG repeats is in the normal range for Huntington disease.',
+        tags: 'No brain overlay',
+        traits: ['This repeat range is not considered a Huntington disease-causing expansion.'],
+        inheritance: 'HTT is inherited in an autosomal-dominant pattern when a disease-causing expansion is present.',
+        meaning: 'This example does not rule out other causes of symptoms or substitute for the full laboratory report.'
     },
-    'prnp-mv': {
-        label: 'Common polymorphism', regions: ['cortex', 'brainstem'], tint: '#c8a9e8',
-        summary: 'PRNP codon 129 Met/Val is a common polymorphism associated with prion disease susceptibility and phenotype differences. Its meaning depends on disease context and other factors.',
-        tags: 'Cortex · brainstem (schematic)'
+    'htt-intermediate': {
+        label: 'HTT: 27–35 repeats', regions: [], tint: '#e8b86a',
+        summary: 'This is the intermediate range: it is not expected to cause Huntington disease in the carrier, but the repeat may be unstable when inherited by the next generation.',
+        tags: 'No brain overlay',
+        traits: ['The carrier is not expected to develop Huntington disease from an intermediate allele.', 'A repeat can expand during transmission; the chance depends on repeat length and parental transmission context, so implications for offspring require genetic counseling.'],
+        inheritance: 'The repeat is passed through an autosomal-dominant gene; instability can affect offspring risk, so genetic counseling is appropriate.',
+        meaning: 'Do not infer a child’s outcome from this example. A specialist should interpret exact repeat counts, family context, and reproductive questions.'
     },
-    'prnp-vv': {
-        label: 'Common polymorphism', regions: ['cortex', 'brainstem'], tint: '#c8a9e8',
-        summary: 'PRNP codon 129 Val/Val is a common polymorphism associated with prion disease susceptibility and phenotype differences. It is not a pathogenic mutation by itself.',
-        tags: 'Cortex · brainstem (schematic)'
+    'htt-reduced': {
+        label: 'HTT: 36–39 repeats', regions: [], tint: '#e8b86a',
+        summary: 'This is the reduced-penetrance range: some people develop Huntington disease and others do not during their lifetime.',
+        tags: 'No brain overlay',
+        traits: ['Some carriers develop Huntington disease and some do not; movement, thinking, and mood features vary between individuals.', 'Repeat count does not predict an individual’s exact onset, symptoms, or course. Repeat interruptions and laboratory methods can affect interpretation; use the report and specialist interpretation.'],
+        inheritance: 'An expanded HTT allele may be transmitted to offspring; genetic counseling is important for personal and family implications.',
+        meaning: 'A verified result requires careful counseling. The repeat range alone does not show whether a person currently has symptoms or when disease might appear.'
+    },
+    'htt-full': {
+        label: 'HTT: 40 or more repeats', regions: [], tint: '#e8b86a',
+        summary: 'A verified allele with 40 or more CAG repeats is generally considered in the full-penetrance range for Huntington disease.',
+        tags: 'No brain overlay',
+        traits: ['Huntington disease can affect movement, thinking, and mood; the presence and timing of particular symptoms cannot be predicted from this example.', 'Longer repeats are associated, on average, with earlier onset, but the exact age and clinical course cannot be predicted from repeat count.'],
+        inheritance: 'Huntington disease is autosomal dominant; each child of a person with a disease-causing expansion has a 50% chance of inheriting that expanded allele.',
+        meaning: 'A genetic test should be interpreted through a qualified genetics professional. This example is not a test result or an individualized prognosis.'
     }
 };
 
@@ -1436,8 +1625,150 @@ function updateVariantOverlay() {
     document.getElementById('variant-class').textContent = profile.label;
     document.getElementById('variant-regions').textContent = profile.tags;
     document.getElementById('variantDescription').textContent = profile.summary;
+    const traits = document.getElementById('variant-traits');
+    traits.replaceChildren();
+    [
+        ['Reported condition associations and traits (group level)', profile.traits.join(' ') || 'No genotype example selected.'],
+        ['Inheritance context', profile.inheritance],
+        ['What this means for a person', profile.meaning]
+    ].forEach(([label, content]) => {
+        const card = document.createElement('div');
+        card.className = 'variant-trait';
+        const heading = document.createElement('strong');
+        heading.textContent = label;
+        const text = document.createElement('span');
+        text.textContent = content;
+        card.append(heading, text);
+        traits.append(card);
+    });
     brainState.geneticOverlay = profile.regions.length ? profile : null;
     if (document.getElementById('brain-3dplot') && window.Plotly) renderBrain();
+}
+
+/* ======================= Brain region information ======================= */
+// Summaries of published literature (region naming follows the Harvard–Oxford/FreeSurfer atlas conventions;
+// Allen Human Brain Atlas used as the gene-expression reference). Educational context only.
+const REGION_INFO = {
+    frontal: {
+        name: 'Frontal lobe (approximate)',
+        role: 'Planning, decision-making, attention, voluntary movement (motor cortex) and personality. It sends output to the basal ganglia.',
+        alzheimers: 'Frontal involvement usually comes after the medial temporal lobe; it is linked to executive-function problems, reduced judgment, and difficulty managing daily tasks as the disease progresses.',
+        parkinsons: 'Motor and prefrontal areas lose input from the dopamine-depleted basal ganglia, contributing to slowed movement and, later, problems with planning and attention.',
+        huntingtons: 'Cortical thinning, including frontal and motor areas, is seen in HD and can accompany mood, planning, and movement changes; it is expressed with the striatal loss.'
+    },
+    parietal: {
+        name: 'Parietal lobe (approximate)',
+        role: 'Integrates touch and spatial information, body position, and attention to space.',
+        alzheimers: 'Parietal (including precuneus) involvement is common in Alzheimer disease and is linked to spatial disorientation and difficulty with visuospatial tasks.',
+        parkinsons: 'Parietal changes appear mainly in later or cognitively affected disease and relate to visuospatial and attention difficulties.',
+        huntingtons: 'Parietal thinning is reported in HD, mostly in later stages, with effects on spatial processing and coordination.'
+    },
+    temporal: {
+        name: 'Temporal lobe (approximate)',
+        role: 'Language comprehension, auditory processing, and memory systems (with the hippocampus and amygdala).',
+        alzheimers: 'Early Alzheimer pathology (Braak stages I–IV) concentrates in the medial temporal lobe, causing the characteristic early memory and language-finding problems.',
+        parkinsons: 'Temporal involvement is more typical of later disease or Parkinson disease dementia and relates to memory and visual hallucinations.',
+        huntingtons: 'Some temporal thinning is described in HD, but it is less central than the striatum.'
+    },
+    occipital: {
+        name: 'Occipital lobe (approximate)',
+        role: 'Primary processing of vision.',
+        alzheimers: 'Usually spared early; involved in the posterior cortical variant and in later stages, affecting visual processing.',
+        parkinsons: 'Reduced occipital function is linked to visual hallucinations and visual-perception problems in advanced or dementia stages.',
+        huntingtons: 'Occipital changes are reported in some HD imaging studies; they are not a main feature.'
+    },
+    hippocampus: {
+        name: 'Hippocampus',
+        role: 'Forms new memories and supports spatial navigation.',
+        alzheimers: 'One of the earliest and most affected regions: tau tangles and neuron loss lead to hippocampal shrinkage, which fits the early difficulty forming new memories.',
+        parkinsons: 'Mild hippocampal atrophy is associated with cognitive decline in Parkinson disease, but it is not the main early site.',
+        huntingtons: 'Hippocampal changes are described in HD and may contribute to memory difficulties; the striatum is affected first.'
+    },
+    amygdala: {
+        name: 'Amygdala',
+        role: 'Emotional processing, fear responses, and attaching emotional meaning to memories.',
+        alzheimers: 'Pathology spreads to the amygdala early; it may contribute to anxiety, apathy, or mood changes.',
+        parkinsons: 'Alpha-synuclein deposits reach the amygdala in Lewy pathology and may relate to anxiety and mood symptoms.',
+        huntingtons: 'Amygdala volume loss has been reported in HD and may relate to emotional recognition and mood changes.'
+    },
+    thalamus: {
+        name: 'Thalamus',
+        role: 'Relay hub that routes sensory and motor signals between the cortex and deeper brain regions.',
+        alzheimers: 'Thalamic atrophy occurs, particularly in later stages, and may influence attention and memory networks.',
+        parkinsons: 'Receives output from the basal ganglia; altered thalamocortical signalling contributes to slowness and tremor circuits. Deep brain stimulation targets neighboring structures.',
+        huntingtons: 'Thalamic volume loss is seen in HD and is part of altered cortico-striato-thalamic circuits.'
+    },
+    caudate: {
+        name: 'Caudate nucleus',
+        role: 'Part of the striatum; supports learning, planning, and cognitive control of movement.',
+        alzheimers: 'Not a primary site; some atrophy occurs in later stages.',
+        parkinsons: 'Receives dopamine from the substantia nigra; dopamine loss here is linked to cognitive and executive changes in addition to movement problems.',
+        huntingtons: 'A core site of HD: caudate atrophy is among the earliest and best-documented changes, often before symptoms, and relates to movement, mood and cognitive changes.'
+    },
+    putamen: {
+        name: 'Putamen',
+        role: 'Part of the striatum; automatic and learned movement control.',
+        alzheimers: 'Not a primary site; some atrophy and amyloid deposition may occur in later stages.',
+        parkinsons: 'Most affected by dopamine loss; the putamen is central to the slowness, stiffness, and reduced automatic movement of Parkinson disease.',
+        huntingtons: 'Along with the caudate, a core site of HD; striatal neuron loss drives involuntary movements (chorea) and later rigidity.'
+    },
+    pallidum: {
+        name: 'Globus pallidus (pallidum)',
+        role: 'Basal ganglia output structure that regulates movement through the thalamus.',
+        alzheimers: 'Not a characteristic site of early Alzheimer disease.',
+        parkinsons: 'Becomes overactive when dopamine is lost; the internal pallidum is a common deep brain stimulation target.',
+        huntingtons: 'Affected indirectly through striatal pathways; atrophy is seen as disease progresses.'
+    },
+    brainstem: {
+        name: 'Brainstem',
+        role: 'Controls breathing, heart rate, sleep, and alertness, and houses dopamine and other neuromodulator cell groups (including the substantia nigra).',
+        alzheimers: 'Brainstem nuclei such as the locus coeruleus show early tau changes and may relate to sleep and mood changes.',
+        parkinsons: 'The substantia nigra pars compacta (dopamine cells) is the hallmark site of cell loss; lower brainstem involvement is linked to sleep problems and autonomic symptoms.',
+        huntingtons: 'Not a main site of change, although some brainstem differences are reported.'
+    },
+    cerebellum: {
+        name: 'Cerebellum',
+        role: 'Coordinates movement, balance, and timing.',
+        alzheimers: 'Relatively spared until late in the disease.',
+        parkinsons: 'Not the primary site, but altered cerebellar activity is reported and may relate to tremor.',
+        huntingtons: 'Cerebellar changes are reported, and coordination and balance problems can accompany HD.'
+    }
+};
+const REGION_ORDER = ['frontal', 'parietal', 'temporal', 'occipital', 'hippocampus', 'amygdala', 'thalamus', 'caudate', 'putamen', 'pallidum', 'brainstem', 'cerebellum'];
+
+function renderRegionInfo() {
+    const picker = document.getElementById('region-picker');
+    const panel = document.getElementById('region-info');
+    if (!picker || !panel) return;
+    const selected = brainState.selected;
+    picker.innerHTML = '';
+    REGION_ORDER.forEach(key => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-pressed', String(selected === key));
+        const dot = document.createElement('i');
+        dot.style.background = Brain.lobeTint[key] || '#c9a7a0';
+        button.append(dot, REGION_INFO[key].name.replace(' (approximate)', ''));
+        button.addEventListener('click', () => selectRegion(key));
+        picker.appendChild(button);
+    });
+    if (!selected) {
+        panel.textContent = 'Click a region on the brain, or choose one above, to see what it does and how it relates to the selected disease.';
+        return;
+    }
+    const disease = selectedDisease();
+    const info = REGION_INFO[selected];
+    panel.innerHTML = '';
+    const add = (tag, text) => { const node = document.createElement(tag); node.textContent = text; panel.appendChild(node); };
+    add('h3', info.name);
+    add('h4', 'What it does');
+    add('p', info.role);
+    add('h4', `Relevance to ${diseaseNames[disease]}`);
+    add('p', info[disease]);
+    const source = document.createElement('p');
+    source.className = 'region-source';
+    source.innerHTML = 'Educational summary of published literature; template anatomy, not a patient finding. Reference atlases: <a href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases" target="_blank" rel="noopener noreferrer">Harvard–Oxford</a> · <a href="https://human.brain-map.org/" target="_blank" rel="noopener noreferrer">Allen Human Brain Atlas</a>.';
+    panel.appendChild(source);
 }
 
 /* ======================= 3D brain ======================= */
@@ -1449,6 +1780,13 @@ function updateVariantOverlay() {
                 for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
                 return new Type(u8.buffer);
             };
+            const LOBES = ['frontal', 'parietal', 'temporal', 'occipital'];
+            const lobeTint = { frontal: '#6fb1e0', parietal: '#8fd18a', temporal: '#e5a05f', occipital: '#b78be0' };
+            const lobeOf = (y, z) => {
+                if (y < -68) return 3;
+                if (y < 20 && z < -12 - 0.293 * (y - 15)) return 2;
+                return y > -15 ? 0 : 1;
+            };
             const prep = (p) => {
                 const q = { name: p.name, n: p.n, v: dec(p.v, Int16Array), nrm: dec(p.nrm, Int8Array) };
                 const f = dec(p.f, Uint16Array), cnt = f.length / 3;
@@ -1459,6 +1797,12 @@ function updateVariantOverlay() {
                 let cx = 0, cy = 0, cz = 0;
                 for (let a = 0; a < q.n; a++) { cx += q.v[a * 3]; cy += q.v[a * 3 + 1]; cz += q.v[a * 3 + 2]; }
                 q.c = [cx / q.n / 10, cy / q.n / 10, cz / q.n / 10];
+                if (p.fc) {
+                    // Approximate lobar division from template (MNI-space) coordinates, not an atlas parcellation
+                    q.lobe = new Uint8Array(q.n);
+                    for (let a = 0; a < q.n; a++) q.lobe[a] = lobeOf(q.v[a * 3 + 1] / 10, q.v[a * 3 + 2] / 10);
+                    q.faceLobe = q.i.map(vertex => q.lobe[vertex]);
+                }
                 return q;
             };
             const cortex = M.cortex.map(prep), sub = M.sub.map(prep);
@@ -1475,7 +1819,7 @@ function updateVariantOverlay() {
                 return `#${channels.join('')}`;
             }
 
-            function cortexTrace(h, A, overlay) {
+            function cortexTrace(h, A, overlay, selected) {
                 const n = h.n, x = new Array(n), y = new Array(n), z = new Array(n), c = new Array(n);
                 const shrink = 1 - 0.05 * A;
                 for (let a = 0; a < n; a++) {
@@ -1488,19 +1832,26 @@ function updateVariantOverlay() {
                     // dark in the folds, light on crowns; atrophy exposes more dark sulcal tissue
                     c[a] = Math.min(1, Math.max(0, 0.5 - 0.5 * d * (1 + 0.5 * A)));
                 }
-                const facecolor = overlay?.regions.includes('cortex')
-                    ? h.facecolor.map(color => mixHex(color, overlay.tint, 0.28))
-                    : h.facecolor;
+                const facecolor = h.facecolor.map((color, face) => {
+                    const lobe = LOBES[h.faceLobe[face]];
+                    let out = mixHex(color, lobeTint[lobe], 0.16);
+                    if (overlay?.regions.includes('cortex')) out = mixHex(out, overlay.tint, 0.28);
+                    if (selected === lobe) out = mixHex(out, '#ffe08a', 0.6);
+                    return out;
+                });
                 return { type: 'mesh3d', x, y, z, i: h.i, j: h.j, k: h.k, facecolor, flatshading: false,
-                         showscale: false, lighting: wet, lightposition: light, hoverinfo: 'skip', name: h.name, showlegend: false };
+                         showscale: false, lighting: wet, lightposition: light, hoverinfo: 'text',
+                         text: Array.from(h.lobe, l => `${LOBES[l][0].toUpperCase()}${LOBES[l].slice(1)} lobe (approx.) · click for details`),
+                         name: h.name, showlegend: false, meta: { cortex: true } };
             }
 
+            const regionKey = name => name.split(' ').pop().toLowerCase();
             const subStyle = {
                 'Hippocampus': { color: '#e8a34a', shrink: 0.4 }, 'Amygdala': { color: '#d9824a', shrink: 0.3 },
                 'Thalamus': { color: '#c9a7a0' }, 'Caudate': { color: '#b98b88' }, 'Putamen': { color: '#c79b8f' },
                 'Pallidum': { color: '#a97a7a' }, 'Brainstem': { color: '#d88c84' }, 'Cerebellum': { color: '#d88c84' }
             };
-            function subTrace(p, A, overlay) {
+            function subTrace(p, A, overlay, selected) {
                 const key = Object.keys(subStyle).find(k => p.name.endsWith(k)), st = subStyle[key] || { color: '#c9a7a0' };
                 const highlighted = overlay?.regions.some(region => p.name.toLowerCase().includes(region));
                 const s = 1 - (st.shrink || 0) * A, n = p.n, x = new Array(n), y = new Array(n), z = new Array(n);
@@ -1509,9 +1860,11 @@ function updateVariantOverlay() {
                     y[a] = p.c[1] + (p.v[a * 3 + 1] / 10 - p.c[1]) * s;
                     z[a] = p.c[2] + (p.v[a * 3 + 2] / 10 - p.c[2]) * s;
                 }
-                const color = highlighted ? mixHex(st.color, overlay.tint, 0.42) : st.color;
+                const region = regionKey(p.name);
+                let color = highlighted ? mixHex(st.color, overlay.tint, 0.42) : st.color;
+                if (selected === region) color = mixHex(color, '#ffe08a', 0.7);
                 return { type: 'mesh3d', x, y, z, i: p.i, j: p.j, k: p.k, color, lighting: matte, lightposition: light,
-                         hoverinfo: 'text', text: p.name, name: p.name, showlegend: false };
+                         hoverinfo: 'text', text: `${p.name} · click for details`, name: p.name, showlegend: false, meta: { region } };
             }
 
             // Lateral ventricles: tubes along an approximate MNI path, widening with atrophy
@@ -1542,11 +1895,11 @@ function updateVariantOverlay() {
                          hoverinfo: 'text', text: 'Lateral ventricle', showlegend: false };
             }
 
-            function traces(A, translucent, overlay) {
-                const t = cortex.map(h => ({ ...cortexTrace(h, A, overlay), opacity: overlay ? 0.2 : translucent ? 0.16 : 1 }));
+            function traces(A, translucent, overlay, selected) {
+                const t = cortex.map(h => ({ ...cortexTrace(h, A, overlay, selected), opacity: translucent || (overlay && !overlay.regions.includes('cortex')) || (selected && !LOBES.includes(selected)) ? 0.16 : 1 }));
                 // Normal view shows only brainstem and cerebellum outside the cortex; deep structures appear in the translucent view
                 sub.forEach(p => {
-                    if (translucent || /Brainstem|Cerebellum/.test(p.name) || overlay?.regions.some(region => p.name.toLowerCase().includes(region))) t.push(subTrace(p, A, overlay));
+                    if (translucent || /Brainstem|Cerebellum/.test(p.name) || regionKey(p.name) === selected || overlay?.regions.some(region => p.name.toLowerCase().includes(region))) t.push(subTrace(p, A, overlay, selected));
                 });
                 if (translucent) { t.push(ventricle(1, A)); t.push(ventricle(-1, A)); }
                 if (overlay) {
@@ -1586,7 +1939,7 @@ function updateVariantOverlay() {
                 }
                 return t;
             }
-            return { traces };
+            return { traces, LOBES, lobeTint, regionKey, lobeAt: (name, vertex) => cortex.find(h => h.name === name).lobe[vertex] };
         })();
 
         const brainLayout = {
@@ -1608,13 +1961,36 @@ function updateVariantOverlay() {
             front: { x: 0.0, y: 1.9, z: 0.25 },
             oblique: { x: -1.4, y: 1.2, z: 0.7 }
         };
-        let brainState = { atrophy: 0, translucent: false, geneticOverlay: null };
+        let brainState = { atrophy: 0, translucent: false, geneticOverlay: null, selected: null };
 
         function renderBrain() {
-            Plotly.react('brain-3dplot', Brain.traces(brainState.atrophy, brainState.translucent, brainState.geneticOverlay), brainLayout, {
+            const gd = document.getElementById('brain-3dplot');
+            const camera = gd.layout?.scene?.camera;
+            const layout = camera ? { ...brainLayout, scene: { ...brainLayout.scene, camera } } : brainLayout;
+            Plotly.react(gd, Brain.traces(brainState.atrophy, brainState.translucent, brainState.geneticOverlay, brainState.selected), layout, {
                 responsive: true, displaylogo: false,
                 modeBarButtonsToRemove: ['sendDataToCloud', 'hoverClosest3d', 'resetCameraLastSave3d']
+            }).then(() => {
+                if (gd.dataset.clickBound) return;
+                gd.dataset.clickBound = '1';
+                gd.on('plotly_click', event => {
+                    const point = event.points?.[0];
+                    if (!point) return;
+                    if (point.data.meta?.cortex) {
+                        const lobe = Brain.LOBES[brainState.lobeLookup(point.data.name, point.pointNumber)];
+                        selectRegion(lobe);
+                    } else if (point.data.meta?.region) {
+                        selectRegion(point.data.meta.region);
+                    }
+                });
             });
+        }
+        brainState.lobeLookup = (name, vertex) => Brain.lobeAt(name, vertex);
+
+        function selectRegion(region) {
+            brainState.selected = brainState.selected === region ? null : region;
+            renderRegionInfo();
+            renderBrain();
         }
         // Manual display control only; it is independent of progression calculations.
         document.addEventListener("DOMContentLoaded", function () {
@@ -1629,6 +2005,7 @@ function updateVariantOverlay() {
             }
             if (!document.getElementById('brain-3dplot')) return;
             renderBrain();
+            renderRegionInfo();
 
             document.getElementById('translucent-toggle').addEventListener('change', e => {
                 brainState.translucent = e.target.checked;
@@ -1642,6 +2019,7 @@ function updateVariantOverlay() {
 window.addEventListener('load', () => {
     initializeProgressionChart();
     document.getElementById('calculate-trend').addEventListener('click', calculateTrend);
+    document.getElementById('prepare-care-brief').addEventListener('click', prepareCareDiscussionBrief);
     document.getElementById('save-trend').addEventListener('click', saveTrend);
     document.getElementById('download-trend').addEventListener('click', downloadTrendReport);
     document.querySelectorAll('[data-disease-option]').forEach(button => {
@@ -1688,5 +2066,6 @@ window.addEventListener('load', () => {
     </main>
 </div>
 <script src="{{ url_for('static', filename='neural-network.js') }}"></script>
+<script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
 </body>
 </html>

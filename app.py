@@ -47,6 +47,14 @@ def home():
 def chat():
     return render_template('chat.html')
 
+@app.route('/interventions')
+def interventions():
+    return render_template('interventions.html')
+
+@app.route('/questions')
+def questions():
+    return render_template('questions.html')
+
 @app.route('/api/chat/status')
 def chat_status():
     return jsonify({

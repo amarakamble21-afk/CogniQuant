@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1118">
+    <title>Care Discussion Estimate | NeuroQuant</title>
+    <script>
+        try {
+            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
+            document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
+        } catch { /* Keep the default appearance when storage is unavailable. */ }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
+    <style>
+        body { margin:0; min-height:100vh; font:14px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        .care-main { position:relative; z-index:1; width:min(100%,1320px); min-width:0; flex:1; margin:0 auto; padding:26px clamp(18px,3vw,42px) 40px; }
+        .care-main header { margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--neuro-border); }
+        .care-main h1 { margin:0 0 7px; color:var(--neuro-accent); font-size:clamp(25px,3vw,34px); }
+        .care-main .subtitle { max-width:780px; color:var(--neuro-muted); }
+        .care-nav { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+        .care-nav a { color:var(--neuro-accent); text-underline-offset:3px; }
+        .care-disclaimer { margin-bottom:20px; padding:16px 18px; border:1px solid var(--neuro-border); border-left:4px solid var(--neuro-accent); border-radius:12px; color:var(--neuro-text); background:var(--neuro-surface); line-height:1.65; }
+        .care-disclaimer strong { display:block; margin-bottom:4px; }
+        .patient-estimate { margin-bottom:20px; padding:18px; }
+        .patient-estimate h2 { margin:0 0 8px; font-size:19px; }
+        .patient-estimate > p { max-width:85ch; margin:0 0 10px; color:var(--neuro-muted); }
+        .estimate-status { color:var(--neuro-text) !important; font-weight:650; }
+        .estimate-review-points { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 20px; margin:12px 0 0; padding-left:20px; color:var(--neuro-text); }
+        .input-context { margin-bottom:20px; padding:18px; }
+        .input-context h2 { margin:0 0 6px; font-size:17px; }
+        .input-context p { margin:0; color:var(--neuro-muted); }
+        .input-context-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 20px; margin:14px 0 0; padding:0; list-style:none; }
+        .input-context-list li { min-width:0; padding:9px 11px; border:1px solid var(--neuro-border); border-radius:9px; color:var(--neuro-text); background:var(--neuro-surface-raised); overflow-wrap:anywhere; }
+        .input-context-list strong { display:block; color:var(--neuro-accent); font-size:11px; }
+        .input-context-list span { font-variant-numeric:tabular-nums; }
+        .care-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; align-items:stretch; }
+        .care-section-title { margin:0 0 12px; color:var(--neuro-text); font-size:18px; }
+        .care-card { display:flex; min-width:0; flex-direction:column; padding:20px; }
+        .care-card[data-selected="true"] { border-color:var(--neuro-accent); box-shadow:0 0 0 1px var(--neuro-accent); }
+        .care-card h2 { margin:0 0 8px; color:var(--neuro-accent); font-size:19px; }
+        .care-card > p { margin:0 0 14px; color:var(--neuro-muted); }
+        .care-card h3 { margin:12px 0 6px; color:var(--neuro-text); font-size:14px; }
+        .care-card ul { margin:0; padding-left:19px; color:var(--neuro-text); }
+        .care-card li { margin:0 0 8px; }
+        .care-card .care-sources { margin-top:auto; padding-top:16px; }
+        .care-sources a, .care-inline-link { color:var(--neuro-accent); text-underline-offset:3px; }
+        .care-prompts { margin-top:22px; padding:20px; }
+        .care-prompts h2 { margin:0 0 10px; font-size:18px; }
+        .care-prompts ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 28px; margin:0; padding-left:19px; color:var(--neuro-muted); }
+        .privacy-note { margin:16px 0 0; color:var(--neuro-muted); font-size:12px; }
+        @media (max-width:900px) { .care-grid { grid-template-columns:1fr; } .care-card { padding:17px; } }
+        @media (max-width:600px) { .care-main { padding:19px 14px 28px; } .care-prompts { padding:16px; } .care-prompts ul, .input-context-list, .estimate-review-points { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <canvas class="neural-field" aria-hidden="true"></canvas>
+    {% include 'panel.html' %}
+    <main class="care-main">
+        <header>
+            <div class="neuro-eyebrow">Education &amp; research</div>
+            <h1>Treatment &amp; Care Guide</h1>
+            <p class="subtitle">A starting point for learning about commonly discussed care approaches and preparing questions for a qualified clinician.</p>
+        </header>
+        <nav class="care-nav" aria-label="Page navigation">
+            <a href="{{ url_for('home') }}">← Return to the dashboard</a>
+            <a href="{{ url_for('chat') }}">Open the general research assistant →</a>
+        </nav>
+        <aside class="care-disclaimer" aria-label="Important medical information">
+            <strong>Patient-specific educational estimate — not medically validated</strong>
+            This page summarizes the values entered for this person, but the estimate may be incomplete or inaccurate. It cannot diagnose, assess individual treatment benefit, or choose an intervention. Medical assessment and treatment decisions require a qualified healthcare professional who can review symptoms, history, examination, medications, and validated tests. Do not start, stop, or change treatment based on this page.
+        </aside>
+        <section class="neuro-card patient-estimate" aria-labelledby="patient-estimate-title">
+            <h2 id="patient-estimate-title">Estimate for these entered results</h2>
+            <p id="patient-estimate-summary" aria-live="polite">No patient-specific entries are available yet. Return to the dashboard and use “Use these entries in a care discussion brief.”</p>
+            <p class="estimate-status" id="patient-estimate-status">Not assessed: this tool does not establish a diagnosis, disease stage, or suitable treatment.</p>
+            <ul class="estimate-review-points" id="estimate-review-points" hidden></ul>
+        </section>
+        <section class="neuro-card input-context" aria-labelledby="input-context-title">
+            <h2 id="input-context-title">Entered values</h2>
+            <p id="input-context-status" aria-live="polite">No dashboard entries were carried into this page. Return to the dashboard and choose “Use these entries in a care discussion brief” to include them.</p>
+            <ul class="input-context-list" id="input-context-list" hidden></ul>
+        </section>
+        <h2 class="care-section-title">General care topics by condition</h2>
+        <section class="care-grid" aria-label="General care information by condition">
+            <article class="neuro-card care-card">
+                <h2>Alzheimer’s disease</h2>
+                <p>Care may combine symptom support, planning, and—in some circumstances—specialist assessment for disease-modifying treatment.</p>
+                <h3>General topics to discuss with a care team</h3>
+                <ul>
+                    <li>Medicines for symptoms and whether they fit the person’s health history.</li>
+                    <li>For eligible people with early symptomatic disease and confirmed amyloid, whether an approved treatment such as lecanemab or donanemab is appropriate, including monitoring and risks.</li>
+                    <li>Support for daily activities, safety, caregiver needs, and advance planning.</li>
+                </ul>
+                <p class="care-sources"><a href="https://medlineplus.gov/alzheimersdisease.html" target="_blank" rel="noopener noreferrer">MedlinePlus: Alzheimer’s disease</a><br><a href="https://www.fda.gov/news-events/press-announcements/fda-converts-novel-alzheimers-disease-treatment-traditional-approval" target="_blank" rel="noopener noreferrer">FDA: lecanemab indication</a></p>
+            </article>
+            <article class="neuro-card care-card">
+                <h2>Parkinson’s disease</h2>
+                <p>Care is individualized around movement and non-movement symptoms, daily function, treatment response, and preferences.</p>
+                <h3>General topics to discuss with a care team</h3>
+                <ul>
+                    <li>Symptom-relieving medicines, timing, benefits, and side effects.</li>
+                    <li>Physical, occupational, or speech therapy and appropriate exercise support.</li>
+                    <li>Whether specialist evaluation for procedures such as deep-brain stimulation is relevant.</li>
+                </ul>
+                <p class="care-sources"><a href="https://medlineplus.gov/parkinsonsdisease.html" target="_blank" rel="noopener noreferrer">MedlinePlus: Parkinson’s disease</a><br><a href="https://www.ninds.nih.gov/health-information/disorders/parkinsons-disease" target="_blank" rel="noopener noreferrer">NINDS: Parkinson’s disease</a></p>
+            </article>
+            <article class="neuro-card care-card">
+                <h2>Huntington’s disease</h2>
+                <p>Supportive care can address movement, mood, cognition, communication, nutrition, and changing daily needs.</p>
+                <h3>General topics to discuss with a care team</h3>
+                <ul>
+                    <li>Options to manage specific symptoms and how benefits and risks will be reviewed.</li>
+                    <li>Physical, occupational, speech, nutrition, and mental-health support.</li>
+                    <li>Genetic counseling and family support when discussing genetic results.</li>
+                </ul>
+                <p class="care-sources"><a href="https://medlineplus.gov/huntingtonsdisease.html" target="_blank" rel="noopener noreferrer">MedlinePlus: Huntington’s disease</a><br><a href="https://www.ncbi.nlm.nih.gov/books/NBK1305/" target="_blank" rel="noopener noreferrer">GeneReviews: Huntington disease</a></p>
+            </article>
+        </section>
+        <section class="neuro-card care-prompts" aria-labelledby="care-prompts-title">
+            <h2 id="care-prompts-title">Questions you could bring to an appointment</h2>
+            <ul>
+                <li>What does this result measure, and how reliable is it for my situation?</li>
+                <li>Could medications, testing conditions, or other health factors affect it?</li>
+                <li>What are the potential benefits, risks, alternatives, and monitoring needs of each option?</li>
+                <li>Which symptoms or changes should prompt me to contact the care team?</li>
+            </ul>
+            <p class="privacy-note">Values are kept in this browser tab’s session storage for this estimate. They are not sent to Groq or another AI service. This page does not infer or recommend a treatment.</p>
+        </section>
+    </main>
+</div>
+<script src="{{ url_for('static', filename='neural-network.js') }}"></script>
+<script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
+<script>
+    (() => {
+        const key = 'neuroquant.care-discussion-inputs.v1';
+        const status = document.getElementById('input-context-status');
+        const list = document.getElementById('input-context-list');
+        const estimateSummary = document.getElementById('patient-estimate-summary');
+        const estimateStatus = document.getElementById('patient-estimate-status');
+        const reviewPoints = document.getElementById('estimate-review-points');
+        const careCards = [...document.querySelectorAll('.care-card')];
+        const numberText = value => Number.isFinite(value) ? String(value) : 'Not entered';
+        const validNumber = value => typeof value === 'number' && Number.isFinite(value);
+        try {
+            const snapshot = JSON.parse(sessionStorage.getItem(key) || 'null');
+            if (!snapshot || typeof snapshot !== 'object') return;
+            const disease = String(snapshot.disease || 'Not specified');
+            status.textContent = `Condition selected on dashboard: ${disease}. Values below are reproduced as entered; they have not been medically interpreted.`;
+            const entries = [];
+            const reviewItems = [];
+            let summary = `${disease}: `;
+            if (snapshot.score && typeof snapshot.score === 'object') {
+                const earlier = snapshot.score.earlier;
+                const later = snapshot.score.later;
+                const interval = snapshot.score.intervalYears;
+                const scorePresent = validNumber(earlier) && validNumber(later);
+                const name = String(snapshot.score.name || 'Clinical score');
+                entries.push({
+                    name: `${name} · earlier report`,
+                    value: numberText(scorePresent ? earlier : NaN)
+                });
+                entries.push({
+                    name: `${name} · most recent report`,
+                    value: numberText(scorePresent ? later : NaN)
+                });
+                entries.push({
+                    name: 'Time between score reports',
+                    value: `${validNumber(interval) ? numberText(interval) : 'Not entered'} years`
+                });
+                if (scorePresent && validNumber(interval) && interval > 0) {
+                    const delta = later - earlier;
+                    const annualized = delta / interval;
+                    summary += `${name} changed ${delta > 0 ? '+' : ''}${delta.toFixed(2)} points across ${interval.toFixed(1)} years (${annualized > 0 ? '+' : ''}${annualized.toFixed(2)} points per year). `;
+                    reviewItems.push(`Ask the clinician what this score and its change mean in the context of symptoms, assessment conditions, and previous visits.`);
+                } else {
+                    summary += `${name} was not entered for both reports, so no change estimate can be calculated. `;
+                    reviewItems.push('Bring the named score from both reports, if available, and confirm that the same assessment version was used.');
+                }
+            }
+            if (validNumber(snapshot.age)) {
+                entries.push({ name: 'Age entered on dashboard', value: `${numberText(snapshot.age)} years` });
+            }
+            if (validNumber(snapshot.httCagRepeatCount)) {
+                entries.push({ name: 'HTT CAG repeat count · context only', value: `${numberText(snapshot.httCagRepeatCount)} repeats` });
+            }
+            if (snapshot.geneticProfileExample && snapshot.geneticProfileExample !== 'none') {
+                entries.push({
+                    name: 'Selected genetic example · not verified test data',
+                    value: String(snapshot.geneticProfileLabel || snapshot.geneticProfileExample)
+                });
+                if (snapshot.geneticProfileMeaning) {
+                    reviewItems.push(`Genetic example context only: ${String(snapshot.geneticProfileMeaning)}`);
+                }
+            }
+            if (Array.isArray(snapshot.results)) {
+                const paired = [];
+                snapshot.results.forEach(result => {
+                    if (!result || typeof result !== 'object') return;
+                    const earlier = result.earlier;
+                    const later = result.later;
+                    const hasEarlier = validNumber(earlier);
+                    const hasLater = validNumber(later);
+                    entries.push({
+                        name: `${result.name || 'Other result'} · earlier report`,
+                        value: hasEarlier ? `${numberText(earlier)} ${result.unit || ''}`.trim() : 'Not entered'
+                    });
+                    entries.push({
+                        name: `${result.name || 'Other result'} · most recent report`,
+                        value: hasLater ? `${numberText(later)} ${result.unit || ''}`.trim() : 'Not entered'
+                    });
+                    if (hasEarlier && hasLater) {
+                        const delta = later - earlier;
+                        const unit = String(result.unit || '');
+                        paired.push({ name: String(result.name || 'Other result') });
+                        entries.push({
+                            name: `${result.name || 'Other result'} · unadjusted difference`,
+                            value: `${delta > 0 ? '+' : ''}${delta} ${unit}`.trim()
+                        });
+                    }
+                });
+                if (paired.length) {
+                    summary += `${paired.length} other report result${paired.length === 1 ? '' : 's'} had values entered at both timepoints; `;
+                    summary += 'their differences are displayed below for clinician review, without interpreting them against medical thresholds. ';
+                    reviewItems.push('For each biomarker, confirm the assay, specimen type, units, laboratory reference range, and collection conditions before interpreting a change.');
+                    reviewItems.push('Protein concentration values are not comparable across different assays or units; ask the ordering clinician or laboratory to interpret the exact test.');
+                } else {
+                    summary += 'no other result had values entered at both timepoints. ';
+                    reviewItems.push('If discussing protein or other biomarker results, bring the complete laboratory report, including assay name, units, and reference range.');
+                }
+            }
+            entries.forEach(entry => {
+                const item = document.createElement('li');
+                const label = document.createElement('strong');
+                const value = document.createElement('span');
+                label.textContent = entry.name;
+                value.textContent = entry.value;
+                item.append(label, value);
+                list.append(item);
+            });
+            if (entries.length) list.hidden = false;
+            estimateSummary.textContent = summary.trim();
+            reviewItems.forEach(text => {
+                const item = document.createElement('li');
+                item.textContent = text;
+                reviewPoints.append(item);
+            });
+            if (reviewItems.length) reviewPoints.hidden = false;
+            estimateStatus.textContent = 'Patient-specific inputs are summarized above. This is not a clinical interpretation; no validated model translates these values into a treatment choice. A qualified clinician must assess the patient and determine whether medical intervention is appropriate.';
+            const diseaseKey = disease.toLowerCase().replace(/[’']/g, '');
+            careCards.forEach(card => {
+                const cardDisease = card.querySelector('h2').textContent.toLowerCase().replace(/[’']/g, '');
+                const selected = cardDisease === diseaseKey;
+                card.dataset.selected = String(selected);
+                card.hidden = !selected;
+            });
+        } catch (error) {
+            status.textContent = 'Could not read this tab’s dashboard entries. Return to the dashboard and prepare the brief again.';
+            console.error('Could not read local care discussion inputs.', error);
+        }
+    })();
+</script>
+</body>
+</html>

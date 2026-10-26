@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b1118">
     <title>NeuroQuant | Explore brain health research</title>
+    <script>
+        try {
+            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
+            document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
+        } catch { /* Keep the default appearance when storage is unavailable. */ }
+    </script>
     <style>
         :root { color-scheme: dark; --bg: #0b1118; --panel: #111b24; --muted: #99aab4; --text: #edf5f2; --mint: #95e3c1; --line: #24343c; }
         * { box-sizing: border-box; }
@@ -66,19 +73,18 @@
         @media (max-width: 1000px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 760px) { .hero { grid-template-columns: 1fr; gap: 12px; padding: 64px 0 50px; } .visual { min-height: 300px; } .orb { width: 275px; } .pixel-brain { width: min(100%, 330px); } .page header > nav { gap: 12px; } .page header > nav a:not(.button) { display: none; } .section-head { align-items: start; flex-direction: column; } .cards { grid-template-columns: 1fr; } footer { flex-direction: column; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } .card:hover { transform: none; } }
-        .page { position:relative; z-index:1; width:min(1280px, calc(100% - 48px)); flex:1; margin:0 auto; }
+        .page { position:relative; z-index:1; width:min(1280px, calc(100% - 48px)); max-width:1280px; flex:1; margin:0 auto; }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
 </head>
 <body>
     <div class="app-shell">
         <canvas class="neural-field" aria-hidden="true"></canvas>
-        {% include 'panel.html' %}
         <div class="page">
-        <header>
-            <a class="brand" href="{{ url_for('landing') }}"><span class="brand-mark" aria-hidden="true">N</span> NEUROQUANT</a>
+        <header style="justify-content:flex-end">
             <nav aria-label="Main navigation">
-                <a href="#platform">Platform</a>
+                {% include 'theme-picker.html' %}
                 <a href="{{ url_for('chat') }}">AI assistant</a>
                 <a class="button" href="{{ url_for('home') }}">Explore the app <span aria-hidden="true">→</span></a>
             </nav>
@@ -116,14 +122,16 @@
                     <a class="card feature-card" href="{{ url_for('home') }}#genomics"><div class="icon" aria-hidden="true">⌬</div><h3>Genomic context</h3><p>Review selected variant context alongside clearly schematic, labeled brain-region markers.</p></a>
                     <a class="card feature-card" href="{{ url_for('home') }}#brain-viewer"><div class="icon" aria-hidden="true">◎</div><h3>Interactive 3D brain</h3><p>Rotate the template anatomy, switch viewpoints, and reveal internal structures.</p></a>
                     <a class="card feature-card" href="{{ url_for('home') }}#assessment-history"><div class="icon" aria-hidden="true">◷</div><h3>Local trend history</h3><p>Save calculated trends in this browser, filter entries, and reopen a previous set of measurements.</p></a>
+                    <a class="card feature-card" href="{{ url_for('questions') }}"><div class="icon" aria-hidden="true">?</div><h3>Results Q&amp;A</h3><p>Read plain-language answers about score ranges, biomarker limits, genetic examples, and medical interpretation.</p></a>
                     <a class="card feature-card" href="{{ url_for('home') }}#progression-outlook"><div class="icon" aria-hidden="true">⇩</div><h3>Portable reports</h3><p>Download trend summaries and export saved local trends as CSV.</p></a>
                     <a class="card feature-card" href="{{ url_for('chat') }}"><div class="icon" aria-hidden="true">✧</div><h3>Research assistant</h3><p>Ask general neuroscience questions and get help understanding the app’s tools and limitations.</p></a>
                 </div>
             </section>
+        </main>
         </div>
-        <footer><span>NEUROQUANT · Research exploration workspace</span><span>Educational use only · Not medical advice</span></footer>
     </div>
     <script src="{{ url_for('static', filename='neural-network.js') }}"></script>
     <script src="{{ url_for('static', filename='pixel-brain.js') }}"></script>
+    <script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
 </body>
 </html>

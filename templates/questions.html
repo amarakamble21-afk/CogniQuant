@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1118">
+    <title>Neuroscience Results Q&amp;A | NeuroQuant</title>
+    <script>
+        try {
+            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
+            document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
+        } catch { /* Keep the default appearance when storage is unavailable. */ }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
+    <style>
+        body { margin:0; min-height:100vh; font:14px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        .qa-main { position:relative; z-index:1; width:min(100%,1180px); min-width:0; flex:1; margin:0 auto; padding:26px clamp(18px,3vw,42px) 40px; }
+        .qa-main header { margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--neuro-border); }
+        .qa-main h1 { margin:0 0 7px; color:var(--neuro-accent); font-size:clamp(25px,3vw,34px); }
+        .qa-main .subtitle { max-width:820px; color:var(--neuro-muted); }
+        .qa-nav { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+        .qa-nav a, .qa-sources a { color:var(--neuro-accent); text-underline-offset:3px; }
+        .qa-notice, .qa-personal, .qa-group { margin-bottom:18px; padding:18px; }
+        .qa-notice { border-left:4px solid var(--neuro-accent); }
+        .qa-notice strong { display:block; margin-bottom:4px; }
+        .qa-main h2 { margin:0 0 9px; font-size:18px; }
+        .qa-personal > p, .qa-group > p { color:var(--neuro-muted); }
+        .qa-details { display:grid; gap:9px; }
+        .qa-details details { border:1px solid var(--neuro-border); border-radius:10px; color:var(--neuro-text); background:var(--neuro-surface); }
+        .qa-details summary { padding:12px 14px; cursor:pointer; font-weight:700; }
+        .qa-details details > p { margin:0; padding:0 14px 14px; color:var(--neuro-muted); }
+        .qa-group h3 { margin:16px 0 8px; color:var(--neuro-accent); font-size:15px; }
+        .qa-sources { margin-top:20px; padding:16px 18px; }
+        .qa-sources ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 22px; padding-left:19px; color:var(--neuro-muted); }
+        .qa-entries { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:0; list-style:none; }
+        .qa-entries li { padding:9px 11px; border:1px solid var(--neuro-border); border-radius:8px; background:var(--neuro-surface-raised); overflow-wrap:anywhere; }
+        .qa-entries strong { display:block; color:var(--neuro-accent); font-size:11px; }
+        @media (max-width:700px) { .qa-main { padding:19px 14px 28px; } .qa-sources ul, .qa-entries { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <canvas class="neural-field" aria-hidden="true"></canvas>
+    {% include 'panel.html' %}
+    <main class="qa-main">
+        <header>
+            <div class="neuro-eyebrow">Research answers</div>
+            <h1>Neuroscience Results Q&amp;A</h1>
+            <p class="subtitle">Plain-language answers about the dashboard’s scores, biomarkers, genetic examples, and what the results can—and cannot—tell you.</p>
+        </header>
+        <nav class="qa-nav" aria-label="Page navigation">
+            <a href="{{ url_for('home') }}">← Return to the dashboard</a>
+            <a href="{{ url_for('interventions') }}">Open the Care Guide →</a>
+        </nav>
+        <aside class="neuro-card qa-notice">
+            <strong>Educational answers, not a medical interpretation</strong>
+            The Q&amp;A below uses published general information. Dashboard entries can be shown for your own reference, but this page does not diagnose, assign disease stage, calculate personal risk, or choose treatment. A qualified clinician must interpret individual results.
+        </aside>
+        <section class="neuro-card qa-personal" aria-labelledby="qa-personal-title">
+            <h2 id="qa-personal-title">Your dashboard entries</h2>
+            <p id="qa-personal-status" aria-live="polite">No dashboard entries are available in this browser tab. Use “Use these entries in a care discussion brief” on the dashboard to carry values here.</p>
+            <ul class="qa-entries" id="qa-entry-list" hidden></ul>
+            <div class="qa-details" id="patient-questions"></div>
+        </section>
+        <section class="neuro-card qa-group">
+            <h2>About neurodegenerative diseases</h2>
+            <div class="qa-details">
+                <details><summary>Does a symptom or a score by itself confirm a disease?</summary><p>No. A clinical score describes specific findings captured by a particular assessment. Diagnosis depends on a qualified clinician’s evaluation, which may include history, examination, appropriate tests, and consideration of other causes.</p></details>
+                <details><summary>Does a higher score always mean the same thing across diseases?</summary><p>No. Each scale has its own items, range, direction, and meaning. This dashboard uses CDR-SB for Alzheimer’s, UPDRS Part III for Parkinson’s, and UHDRS Total Motor Score for Huntington’s. Values across different scales are not directly comparable.</p></details>
+                <details><summary>What does the Alzheimer’s CDR-SB score show?</summary><p>The Clinical Dementia Rating–Sum of Boxes is a clinician-rated measure across memory, orientation, judgment/problem solving, community affairs, home/hobbies, and personal care. The dashboard’s 0–18 range uses higher scores for greater impairment; interpretation depends on clinical context and the assessment.</p></details>
+                <details><summary>What does the Parkinson’s UPDRS Part III score show?</summary><p>It rates motor signs observed during an examination. The original UPDRS Part III ranges from 0 to 108, with higher scores reflecting more motor signs recorded. Medication state, exam conditions, and the exact scale version matter; MDS-UPDRS and UPDRS scores should not be mixed.</p></details>
+                <details><summary>What does the Huntington’s UHDRS Total Motor Score show?</summary><p>It records motor findings assessed by a trained rater; this dashboard uses a 0–124 range, with higher values indicating more motor signs recorded. It does not by itself summarize all Huntington’s symptoms, establish stage, or predict an individual’s course.</p></details>
+                <details><summary>Are the dashboard’s annualized rates progression forecasts?</summary><p>No. They summarize the difference between the two values entered divided by the interval entered. A straight-line extension is a mathematical illustration, not a validated forecast of an individual’s future disease course or neuron loss.</p></details>
+                <details><summary>Why can scores change between assessments?</summary><p>Observed scores can vary with symptoms, rater, testing conditions, medication timing, fatigue, and the version or administration of the test. A change should be reviewed in clinical context, not read as a standalone diagnosis or treatment signal.</p></details>
+            </div>
+        </section>
+        <section class="neuro-card qa-group">
+            <h2>About biomarkers and protein results</h2>
+            <div class="qa-details">
+                <details><summary>Can I compare protein concentrations from two reports?</summary><p>Only if the reports measure the same analyte using comparable assay methods, specimen type, units, and collection/processing conditions. Different platforms and laboratories can use different calibration and reference intervals. This dashboard does not harmonize assays or apply clinically validated thresholds.</p></details>
+                <details><summary>Does a biomarker change mean the disease has progressed?</summary><p>Not necessarily. The biological meaning depends on the specific marker, assay, specimen, clinical indication, and validated interpretation for that test. An unadjusted numeric difference in this app is descriptive only and does not indicate disease progression or treatment response.</p></details>
+                <details><summary>Why do you ask for the assay name and units?</summary><p>A number without its test method, specimen, units, and laboratory reference interval can be misleading. Use the complete original lab report and ask the ordering clinician to interpret the result.</p></details>
+                <details><summary>Are the Parkinson’s voice features routine biomarkers?</summary><p>No. The dataset includes voice-analysis measures collected for research. They are not interchangeable with a clinical motor examination, and this prototype’s normalized feature index is not a validated diagnostic, progression, or treatment-response measure.</p></details>
+            </div>
+        </section>
+        <section class="neuro-card qa-group">
+            <h2>About genetic results</h2>
+            <div class="qa-details">
+                <details><summary>Does selecting a genotype in the dashboard mean I have it?</summary><p>No. The variant explorer contains illustrative examples only; it is not connected to genetic testing. Only a qualified laboratory report can establish a person’s genotype or repeat count.</p></details>
+                <details><summary>Does APOE ε4 cause Alzheimer’s disease?</summary><p>APOE ε4 is associated with increased late-onset Alzheimer disease risk, but it is neither necessary nor sufficient for the disease. A result cannot tell whether a person will develop Alzheimer’s or predict exact onset and course.</p></details>
+                <details><summary>What does an HTT CAG repeat range mean?</summary><p>As general categories, 26 or fewer repeats are in the normal range; 27–35 is an intermediate range that does not cause Huntington disease in the carrier but may be unstable in transmission; 36–39 is reduced penetrance; and 40 or more is generally considered full penetrance. Exact interpretation requires a clinical laboratory report and genetic counseling. Repeat count does not predict an individual’s exact onset.</p></details>
+                <details><summary>Do LRRK2 or GBA1 variants guarantee Parkinson’s disease?</summary><p>No. LRRK2-associated disease has incomplete penetrance. GBA1 variants can increase Parkinson disease probability but do not make it certain; biallelic disease-causing GBA1 variants can cause Gaucher disease. The exact variant and whether one or both gene copies are affected matter.</p></details>
+            </div>
+        </section>
+        <section class="neuro-card qa-group">
+            <h2>About care and treatment</h2>
+            <div class="qa-details">
+                <details><summary>Can these results tell me which treatment to use?</summary><p>No. This research prototype does not evaluate eligibility, treatment benefit, contraindications, or individualized care. Discuss options, risks, benefits, and monitoring with your clinician. Do not start, stop, or change treatment based on this site.</p></details>
+                <details><summary>When should I seek medical help?</summary><p>For new, worsening, or concerning symptoms, contact a healthcare professional who knows the person’s history. For an immediate emergency, use local emergency services.</p></details>
+            </div>
+        </section>
+        <section class="neuro-card qa-sources">
+            <h2>Sources for further reading</h2>
+            <ul>
+                <li><a href="https://medlineplus.gov/genetics/gene/apoe/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: APOE</a></li>
+                <li><a href="https://medlineplus.gov/genetics/gene/lrrk2/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: LRRK2</a></li>
+                <li><a href="https://medlineplus.gov/genetics/gene/gba1/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: GBA1</a></li>
+                <li><a href="https://medlineplus.gov/genetics/condition/huntington-disease/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: Huntington disease</a></li>
+                <li><a href="https://medlineplus.gov/genetics/condition/parkinsons-disease/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: Parkinson disease</a></li>
+                <li><a href="https://medlineplus.gov/genetics/condition/alzheimers-disease/" target="_blank" rel="noopener noreferrer">MedlinePlus Genetics: Alzheimer disease</a></li>
+            </ul>
+        </section>
+    </main>
+</div>
+<script src="{{ url_for('static', filename='neural-network.js') }}"></script>
+<script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
+<script>
+    (() => {
+        const status = document.getElementById('qa-personal-status');
+        const list = document.getElementById('qa-entry-list');
+        const personalized = document.getElementById('patient-questions');
+        const numberText = value => typeof value === 'number' && Number.isFinite(value) ? String(value) : 'Not entered';
+        try {
+            const snapshot = JSON.parse(sessionStorage.getItem('neuroquant.care-discussion-inputs.v1') || 'null');
+            if (!snapshot || typeof snapshot !== 'object') return;
+            const disease = String(snapshot.disease || 'Not specified');
+            status.textContent = `Showing values carried from the dashboard for ${disease}. These are the entered values, not a medical interpretation.`;
+            const entries = [];
+            if (snapshot.score && typeof snapshot.score === 'object') {
+                entries.push([`${snapshot.score.name || 'Clinical score'} · earlier`, numberText(snapshot.score.earlier)]);
+                entries.push([`${snapshot.score.name || 'Clinical score'} · recent`, numberText(snapshot.score.later)]);
+                if (typeof snapshot.score.earlier === 'number' && Number.isFinite(snapshot.score.earlier)
+                    && typeof snapshot.score.later === 'number' && Number.isFinite(snapshot.score.later)
+                    && typeof snapshot.score.intervalYears === 'number' && snapshot.score.intervalYears > 0) {
+                    const delta = snapshot.score.later - snapshot.score.earlier;
+                    entries.push(['Unadjusted score difference', `${delta > 0 ? '+' : ''}${delta.toFixed(2)} points`]);
+                    entries.push(['Interval', `${snapshot.score.intervalYears} years`]);
+                }
+            }
+            (Array.isArray(snapshot.results) ? snapshot.results : []).forEach(result => {
+                if (!result || typeof result !== 'object') return;
+                const name = String(result.name || 'Other result');
+                const unit = String(result.unit || '');
+                entries.push([`${name} · earlier`, typeof result.earlier === 'number' ? `${numberText(result.earlier)} ${unit}`.trim() : 'Not entered']);
+                entries.push([`${name} · recent`, typeof result.later === 'number' ? `${numberText(result.later)} ${unit}`.trim() : 'Not entered']);
+            });
+            if (typeof snapshot.age === 'number') entries.push(['Age entered', `${snapshot.age} years`]);
+            if (typeof snapshot.httCagRepeatCount === 'number') entries.push(['HTT CAG example context', `${snapshot.httCagRepeatCount} repeats`]);
+            if (snapshot.geneticProfileExample && snapshot.geneticProfileExample !== 'none') {
+                entries.push(['Selected genetic example', `${snapshot.geneticProfileLabel || snapshot.geneticProfileExample} (not verified test data)`]);
+                if (snapshot.geneticProfileMeaning) {
+                    const explanation = document.createElement('p');
+                    explanation.textContent = `Selected example context: ${snapshot.geneticProfileMeaning} This is not a verified patient genetic result.`;
+                    personalized.append(explanation);
+                }
+            }
+            entries.forEach(([labelText, valueText]) => {
+                const item = document.createElement('li');
+                const label = document.createElement('strong');
+                const value = document.createElement('span');
+                label.textContent = labelText;
+                value.textContent = valueText;
+                item.append(label, value);
+                list.append(item);
+            });
+            if (entries.length) list.hidden = false;
+            const questions = [
+                'What does this specific score measure, and is its direction or range correct for the test version on the report?',
+                'Could the observed difference reflect symptoms, test conditions, medications, or normal measurement variability?',
+                'For each entered biomarker, are the analyte, assay, specimen, units, and reference range comparable across reports?',
+                'What additional examination or validated tests are needed before making a diagnosis or discussing interventions?'
+            ];
+            if (snapshot.geneticProfileExample && snapshot.geneticProfileExample !== 'none') {
+                questions.push('Is this selected genetic example the same variant and classification as the person’s verified laboratory report?');
+            }
+            questions.forEach(question => {
+                const item = document.createElement('details');
+                const summary = document.createElement('summary');
+                const answer = document.createElement('p');
+                summary.textContent = question;
+                answer.textContent = 'This page cannot answer that for an individual. Bring the complete report and discuss interpretation with the clinician or genetic counselor who can review the person’s history and examination.';
+                item.append(summary, answer);
+                personalized.append(item);
+            });
+        } catch (error) {
+            status.textContent = 'Could not read dashboard entries in this tab. Return to the dashboard and prepare the brief again.';
+            console.error('Could not read dashboard entries for Results Q&A.', error);
+        }
+    })();
+</script>
+</body>
+</html>

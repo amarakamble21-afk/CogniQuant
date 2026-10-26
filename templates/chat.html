@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b1118">
     <title>Research Assistant | NeuroQuant</title>
+    <script>
+        try {
+            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
+            document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
+        } catch { /* Keep the default appearance when storage is unavailable. */ }
+    </script>
     <style>
         :root { color-scheme: dark; --bg: #0b1118; --surface: #111b23; --line: #23333b; --text: #edf5f2; --muted: #91a3a7; --mint: #95e3c1; }
         * { box-sizing: border-box; }
@@ -189,5 +196,6 @@
         });
     </script>
     <script src="{{ url_for('static', filename='neural-network.js') }}"></script>
+    <script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
 </body>
 </html>

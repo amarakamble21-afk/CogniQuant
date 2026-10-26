@@ -60,6 +60,12 @@ body:has(.workspace-main) .neuro-card {
 }
 body:has(.workspace-main) .metric-card { transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
 body:has(.workspace-main) .metric-card:hover { transform: translateY(-3px); border-color: rgba(149, 227, 193, .32); }
+body:has(.workspace-main) .metric-card[data-change-level="rising"] { border-color: rgba(242, 165, 65, .62); }
+body:has(.workspace-main) .metric-card[data-change-level="rising"] #risk-category { color: #f2b65e; }
+body:has(.workspace-main) .metric-card[data-change-level="falling"] { border-color: rgba(120, 197, 231, .58); }
+body:has(.workspace-main) .metric-card[data-change-level="falling"] #risk-category { color: #91d2ed; }
+body:has(.workspace-main) .metric-card[data-change-level="unchanged"] { border-color: rgba(130, 148, 156, .58); }
+body:has(.workspace-main) .metric-card[data-change-level="unchanged"] #risk-category { color: #bdc9cd; }
 body:has(.workspace-main) .chart-box,
 body:has(.workspace-main) .simulator-chart { padding: 8px; border: 1px solid rgba(207, 255, 235, .08); border-radius: 14px; background: rgba(9, 19, 25, .32); }
 body:has(.workspace-main) input[type="number"],
@@ -115,6 +121,249 @@ body:has(.workspace-main) .source-tag.warn { color: #f0d99b; background: #2b281b
 .chat-main .composer-wrap { background: linear-gradient(transparent, rgba(8, 16, 22, .96) 28%); }
 .neuro-eyebrow { color: var(--neuro-accent); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .neuro-small { color: var(--neuro-muted); font-size: 12px; line-height: 1.6; }
+
+.theme-picker { position: relative; z-index: 5; color: var(--neuro-text); font-size: 12px; }
+.theme-picker summary {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border: 1px solid var(--neuro-border);
+    border-radius: 9px;
+    color: var(--neuro-text);
+    background: var(--neuro-surface);
+    cursor: pointer;
+    font-weight: 700;
+    list-style: none;
+    white-space: nowrap;
+}
+.theme-picker summary::-webkit-details-marker { display: none; }
+.theme-picker summary:hover, .theme-picker[open] summary { border-color: var(--neuro-accent); }
+.theme-picker-panel {
+    position: absolute;
+    z-index: 8;
+    top: calc(100% + 8px);
+    right: 0;
+    display: grid;
+    width: min(260px, calc(100vw - 28px));
+    gap: 11px;
+    padding: 14px;
+    border: 1px solid var(--neuro-border);
+    border-radius: 12px;
+    color: var(--neuro-text);
+    background: var(--neuro-surface-raised);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, .28);
+}
+.theme-picker-panel label { display: grid; gap: 5px; color: var(--neuro-muted); font-size: 11px; font-weight: 700; }
+.theme-picker-panel select {
+    width: 100%;
+    min-height: 38px;
+    padding: 7px 9px;
+    border: 1px solid var(--neuro-border);
+    border-radius: 8px;
+    color: var(--neuro-text);
+    background: var(--neuro-bg);
+    font: inherit;
+}
+.app-sidebar > .theme-picker { margin: 18px 9px 0; }
+.app-sidebar > .theme-picker .theme-picker-panel { right: auto; left: 0; }
+
+html[data-palette="mint-ocean"][data-mode="dark"] {
+    color-scheme: dark;
+    --palette-bg: #0b1118; --palette-surface: #111b24; --palette-raised: #15232b;
+    --palette-border: #263840; --palette-text: #edf5f2; --palette-muted: #97a9ad;
+    --palette-accent: #95e3c1; --palette-accent-text: #092017; --palette-glow: rgba(39,110,91,.17);
+}
+html[data-palette="lavender-plum"][data-mode="dark"] {
+    color-scheme: dark;
+    --palette-bg: #15111f; --palette-surface: #211a2d; --palette-raised: #2b213a;
+    --palette-border: #443657; --palette-text: #f4effb; --palette-muted: #b3a8c2;
+    --palette-accent: #c9a9f5; --palette-accent-text: #211331; --palette-glow: rgba(128,91,170,.2);
+}
+html[data-palette="peach-rose"][data-mode="dark"] {
+    color-scheme: dark;
+    --palette-bg: #1c1218; --palette-surface: #2b1b23; --palette-raised: #37232d;
+    --palette-border: #553541; --palette-text: #fbf0ed; --palette-muted: #c3a7aa;
+    --palette-accent: #ffb5a0; --palette-accent-text: #351911; --palette-glow: rgba(178,84,94,.19);
+}
+html[data-palette="sky-slate"][data-mode="dark"] {
+    color-scheme: dark;
+    --palette-bg: #101923; --palette-surface: #1a2734; --palette-raised: #223443;
+    --palette-border: #344b5c; --palette-text: #edf5fa; --palette-muted: #a3b5c1;
+    --palette-accent: #91d5ef; --palette-accent-text: #10222b; --palette-glow: rgba(66,128,164,.2);
+}
+html[data-palette="mint-ocean"][data-mode="light"] {
+    color-scheme: light;
+    --palette-bg: #f2f8f5; --palette-surface: #ffffff; --palette-raised: #e5f1eb;
+    --palette-border: #c5d9ce; --palette-text: #1b3028; --palette-muted: #526a60;
+    --palette-accent: #287a57; --palette-accent-text: #ffffff; --palette-glow: rgba(73,161,117,.13);
+}
+html[data-palette="lavender-plum"][data-mode="light"] {
+    color-scheme: light;
+    --palette-bg: #f7f4fb; --palette-surface: #ffffff; --palette-raised: #eee7f6;
+    --palette-border: #d5c8e3; --palette-text: #30233e; --palette-muted: #665777;
+    --palette-accent: #704a9b; --palette-accent-text: #ffffff; --palette-glow: rgba(142,105,185,.14);
+}
+html[data-palette="peach-rose"][data-mode="light"] {
+    color-scheme: light;
+    --palette-bg: #fff5f1; --palette-surface: #ffffff; --palette-raised: #f8e8e3;
+    --palette-border: #e8cbc2; --palette-text: #422a2b; --palette-muted: #805c5d;
+    --palette-accent: #a94e49; --palette-accent-text: #ffffff; --palette-glow: rgba(205,115,99,.13);
+}
+html[data-palette="sky-slate"][data-mode="light"] {
+    color-scheme: light;
+    --palette-bg: #f1f7fb; --palette-surface: #ffffff; --palette-raised: #e6eff5;
+    --palette-border: #c6d7e2; --palette-text: #213746; --palette-muted: #536f80;
+    --palette-accent: #286e91; --palette-accent-text: #ffffff; --palette-glow: rgba(73,145,181,.14);
+}
+html[data-palette][data-mode] {
+    --neuro-bg: var(--palette-bg);
+    --neuro-surface: var(--palette-surface);
+    --neuro-surface-raised: var(--palette-raised);
+    --neuro-border: var(--palette-border);
+    --neuro-text: var(--palette-text);
+    --neuro-muted: var(--palette-muted);
+    --neuro-accent: var(--palette-accent);
+    --neuro-accent-deep: var(--palette-raised);
+    --neuro-blue: var(--palette-accent);
+    --neuro-glass: var(--palette-surface);
+    --neuro-glass-edge: var(--palette-border);
+    --bg: var(--palette-bg);
+    --surface: var(--palette-surface);
+    --panel: var(--palette-surface);
+    --line: var(--palette-border);
+    --text: var(--palette-text);
+    --muted: var(--palette-muted);
+    --mint: var(--palette-accent);
+}
+html[data-palette][data-mode] body {
+    color: var(--palette-text) !important;
+    background: radial-gradient(ellipse at 75% 14%, var(--palette-glow), transparent 38%), var(--palette-bg) !important;
+}
+html[data-mode="light"] .app-sidebar {
+    border-color: var(--palette-border) !important;
+    color: var(--palette-text) !important;
+    background: var(--palette-surface) !important;
+    box-shadow: 8px 0 28px rgba(35, 55, 65, .08);
+}
+html[data-mode="light"] .sidebar-brand,
+html[data-mode="light"] .sidebar-note strong,
+html[data-mode="light"] .sidebar-links a.active { color: var(--palette-text); }
+html[data-mode="light"] .sidebar-note,
+html[data-mode="light"] .sidebar-links a.active { background: var(--palette-raised); }
+html[data-mode="light"] .sidebar-links a { color: var(--palette-muted); }
+html[data-mode="light"] .sidebar-links a:hover { color: var(--palette-text); background: var(--palette-raised); }
+html[data-palette][data-mode="light"] .neuro-card,
+html[data-palette][data-mode="light"] .panel,
+html[data-palette][data-mode="light"] .metric-card,
+html[data-palette][data-mode="light"] .info-card,
+html[data-palette][data-mode="light"] .brain-viewer-panel,
+html[data-palette][data-mode="light"] .trend-workspace,
+html[data-palette][data-mode="light"] .genomics {
+    border-color: var(--palette-border) !important;
+    color: var(--palette-text) !important;
+    background: var(--palette-surface) !important;
+    box-shadow: 0 10px 30px rgba(35, 55, 65, .08);
+}
+html[data-palette][data-mode="light"] .combined-measure-inputs,
+html[data-palette][data-mode="light"] .combined-trend-figure,
+html[data-palette][data-mode="light"] .disease-overview,
+html[data-palette][data-mode="light"] .range-control,
+html[data-palette][data-mode="light"] .biomarker-slider,
+html[data-palette][data-mode="light"] .genetic-context-slider,
+html[data-palette][data-mode="light"] .biology-context,
+html[data-palette][data-mode="light"] .region-info {
+    border-color: var(--palette-border) !important;
+    color: var(--palette-text) !important;
+    background: var(--palette-raised) !important;
+}
+html[data-palette][data-mode="light"] input,
+html[data-palette][data-mode="light"] textarea,
+html[data-palette][data-mode="light"] select,
+html[data-palette][data-mode="light"] .composer,
+html[data-palette][data-mode="light"] .suggestion,
+html[data-palette][data-mode="light"] .bubble,
+html[data-palette][data-mode="light"] .page-nav a,
+html[data-palette][data-mode="light"] button.secondary {
+    border-color: var(--palette-border) !important;
+    color: var(--palette-text) !important;
+    background-color: var(--palette-surface) !important;
+}
+html[data-palette][data-mode="light"] .message.user .bubble { background: var(--palette-raised) !important; }
+html[data-palette][data-mode="light"] .button:not(.secondary),
+html[data-palette][data-mode="light"] button.primary,
+html[data-palette][data-mode="light"] .send-button,
+html[data-palette][data-mode="light"] .tab-btn.active {
+    border-color: var(--palette-accent) !important;
+    color: var(--palette-accent-text) !important;
+    background: var(--palette-accent) !important;
+}
+html[data-palette][data-mode="light"] h1,
+html[data-palette][data-mode="light"] h2,
+html[data-palette][data-mode="light"] h3,
+html[data-palette][data-mode="light"] h4,
+html[data-palette][data-mode="light"] .card h3,
+html[data-palette][data-mode="light"] .intro h1,
+html[data-palette][data-mode="light"] .top-title strong { color: var(--palette-text) !important; }
+html[data-palette][data-mode="light"] p,
+html[data-palette][data-mode="light"] small,
+html[data-palette][data-mode="light"] .metric-sub,
+html[data-palette][data-mode="light"] .lead,
+html[data-palette][data-mode="light"] .intro p,
+html[data-palette][data-mode="light"] .card p { color: var(--palette-muted); }
+html[data-palette][data-mode="light"] .metric-value,
+html[data-palette][data-mode="light"] .icon,
+html[data-palette][data-mode="light"] .eyebrow,
+html[data-palette][data-mode="light"] .intro-label,
+html[data-palette][data-mode="light"] .neuro-eyebrow { color: var(--palette-accent) !important; }
+html[data-palette][data-mode="light"] .trend-chart,
+html[data-palette][data-mode="light"] .chart-box,
+html[data-palette][data-mode="light"] .simulator-chart { border-color: var(--palette-border); background: var(--palette-bg); }
+html[data-palette][data-mode="light"] .disclaimer,
+html[data-palette][data-mode="light"] .risk-explanation,
+html[data-palette][data-mode="light"] .simulator-warning { color: var(--palette-text) !important; background: var(--palette-raised) !important; }
+html[data-palette][data-mode="light"] .card,
+html[data-palette][data-mode="light"] .float-card { border-color: var(--palette-border); color: var(--palette-text); background: var(--palette-surface); }
+html[data-palette][data-mode="dark"] .app-sidebar { background: linear-gradient(165deg, var(--palette-surface), var(--palette-bg)) !important; }
+html[data-palette][data-mode="dark"] .chat-main .bubble,
+html[data-palette][data-mode="dark"] .chat-main .composer,
+html[data-palette][data-mode="dark"] .chat-main .suggestion,
+html[data-palette][data-mode="dark"] .chat-main .message.user .bubble,
+html[data-palette][data-mode="dark"] .sidebar-note,
+html[data-palette][data-mode="dark"] .combined-measure-inputs,
+html[data-palette][data-mode="dark"] .combined-trend-figure,
+html[data-palette][data-mode="dark"] .disease-overview,
+html[data-palette][data-mode="dark"] .range-control,
+html[data-palette][data-mode="dark"] .biomarker-slider,
+html[data-palette][data-mode="dark"] .genetic-context-slider,
+html[data-palette][data-mode="dark"] .trend-chart,
+html[data-palette][data-mode="dark"] .chart-box,
+html[data-palette][data-mode="dark"] .simulator-chart,
+html[data-palette][data-mode="dark"] .card,
+html[data-palette][data-mode="dark"] .float-card {
+    border-color: var(--palette-border);
+    color: var(--palette-text);
+    background-color: var(--palette-surface);
+}
+html[data-palette][data-mode="dark"] button.primary,
+html[data-palette][data-mode="dark"] .send-button,
+html[data-palette][data-mode="dark"] .button:not(.secondary),
+html[data-palette][data-mode="dark"] .tab-btn.active {
+    border-color: var(--palette-accent);
+    color: var(--palette-accent-text);
+    background: var(--palette-accent);
+}
+html[data-palette][data-mode="dark"] .app-sidebar .sidebar-brand,
+html[data-palette][data-mode="dark"] .app-sidebar .sidebar-note strong { color: var(--palette-text); }
+html[data-palette][data-mode="dark"] .app-sidebar .sidebar-links a.active { color: var(--palette-accent); }
+html[data-palette][data-mode="dark"] .neuro-card,
+html[data-palette][data-mode="dark"] .panel,
+html[data-palette][data-mode="dark"] .metric-card,
+html[data-palette][data-mode="dark"] .info-card { color: var(--palette-text); }
+html[data-palette][data-mode="dark"] h1,
+html[data-palette][data-mode="dark"] .metric-value,
+html[data-palette][data-mode="dark"] .info-card h4 { color: var(--palette-accent); }
 
 @media (max-width: 760px) {
     .app-shell { flex-direction: column; }
