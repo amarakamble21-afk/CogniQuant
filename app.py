@@ -276,6 +276,10 @@ def progression():
 
 if __name__ == '__main__':
     print("\n==================================================")
-    print("Launching Local Web App: http://127.0.0.1:5000/")
+    print("Starting web app...")
     print("==================================================\n")
-    app.run(debug=True, port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False,
+    )
