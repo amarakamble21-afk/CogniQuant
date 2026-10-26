@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='neuroquant-icon.svg') }}">
     <meta name="theme-color" content="#0b1118">
     <title>Care Discussion Estimate | NeuroQuant</title>
     <script>
@@ -28,6 +29,15 @@
         .patient-estimate > p { max-width:85ch; margin:0 0 10px; color:var(--neuro-muted); }
         .estimate-status { color:var(--neuro-text) !important; font-weight:650; }
         .estimate-review-points { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 20px; margin:12px 0 0; padding-left:20px; color:var(--neuro-text); }
+        .options-section { margin-bottom:20px; padding:18px; }
+        .options-section h2 { margin:0 0 8px; font-size:19px; }
+        .options-intro { margin:0 0 14px; color:var(--neuro-muted); }
+        .options-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+        .option-card { padding:14px; border:1px solid var(--neuro-border); border-radius:10px; color:var(--neuro-text); background:var(--neuro-surface-raised); }
+        .option-card h3 { margin:0 0 6px; color:var(--neuro-accent); font-size:15px; }
+        .option-card p { margin:0 0 7px; }
+        .option-card p:last-child { margin-bottom:0; color:var(--neuro-muted); font-size:12px; }
+        .option-label { display:inline-block; margin-bottom:6px; padding:2px 7px; border:1px solid var(--neuro-border); border-radius:999px; color:var(--neuro-muted); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
         .input-context { margin-bottom:20px; padding:18px; }
         .input-context h2 { margin:0 0 6px; font-size:17px; }
         .input-context p { margin:0; color:var(--neuro-muted); }
@@ -51,7 +61,7 @@
         .care-prompts ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 28px; margin:0; padding-left:19px; color:var(--neuro-muted); }
         .privacy-note { margin:16px 0 0; color:var(--neuro-muted); font-size:12px; }
         @media (max-width:900px) { .care-grid { grid-template-columns:1fr; } .care-card { padding:17px; } }
-        @media (max-width:600px) { .care-main { padding:19px 14px 28px; } .care-prompts { padding:16px; } .care-prompts ul, .input-context-list, .estimate-review-points { grid-template-columns:1fr; } }
+        @media (max-width:600px) { .care-main { padding:19px 14px 28px; } .care-prompts, .options-section { padding:16px; } .care-prompts ul, .input-context-list, .estimate-review-points, .options-list { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
@@ -62,15 +72,14 @@
         <header>
             <div class="neuro-eyebrow">Education &amp; research</div>
             <h1>Treatment &amp; Care Guide</h1>
-            <p class="subtitle">A starting point for learning about commonly discussed care approaches and preparing questions for a qualified clinician.</p>
+            <p class="subtitle">Review possible care options alongside the values entered on the dashboard. This is an educational estimate, not a treatment plan.</p>
         </header>
         <nav class="care-nav" aria-label="Page navigation">
             <a href="{{ url_for('home') }}">← Return to the dashboard</a>
-            <a href="{{ url_for('chat') }}">Open the general research assistant →</a>
         </nav>
         <aside class="care-disclaimer" aria-label="Important medical information">
             <strong>Patient-specific educational estimate — not medically validated</strong>
-            This page summarizes the values entered for this person, but the estimate may be incomplete or inaccurate. It cannot diagnose, assess individual treatment benefit, or choose an intervention. Medical assessment and treatment decisions require a qualified healthcare professional who can review symptoms, history, examination, medications, and validated tests. Do not start, stop, or change treatment based on this page.
+            This page summarizes the values entered for this person and lists possible options for discussion. The estimate may be incomplete or inaccurate; it cannot diagnose, determine treatment benefit, or choose an intervention. Medical assessment and treatment decisions require a qualified clinician who can review symptoms, history, examination, medications, and validated tests. Do not start, stop, or change treatment based on this page.
         </aside>
         <section class="neuro-card patient-estimate" aria-labelledby="patient-estimate-title">
             <h2 id="patient-estimate-title">Estimate for these entered results</h2>
@@ -78,17 +87,23 @@
             <p class="estimate-status" id="patient-estimate-status">Not assessed: this tool does not establish a diagnosis, disease stage, or suitable treatment.</p>
             <ul class="estimate-review-points" id="estimate-review-points" hidden></ul>
         </section>
+        <section class="neuro-card options-section" aria-labelledby="possible-options-title">
+            <h2 id="possible-options-title">Possible options related to the selected condition</h2>
+            <p class="options-intro" id="options-intro">Prepare the brief from the dashboard to see disease-specific options and how they may relate to the entered results.</p>
+            <p class="estimate-status" id="options-data-context"></p>
+            <div class="options-list" id="options-list"></div>
+        </section>
         <section class="neuro-card input-context" aria-labelledby="input-context-title">
             <h2 id="input-context-title">Entered values</h2>
             <p id="input-context-status" aria-live="polite">No dashboard entries were carried into this page. Return to the dashboard and choose “Use these entries in a care discussion brief” to include them.</p>
             <ul class="input-context-list" id="input-context-list" hidden></ul>
         </section>
-        <h2 class="care-section-title">General care topics by condition</h2>
+        <h2 class="care-section-title">Condition information</h2>
         <section class="care-grid" aria-label="General care information by condition">
             <article class="neuro-card care-card">
                 <h2>Alzheimer’s disease</h2>
                 <p>Care may combine symptom support, planning, and—in some circumstances—specialist assessment for disease-modifying treatment.</p>
-                <h3>General topics to discuss with a care team</h3>
+                <h3>Possible options</h3>
                 <ul>
                     <li>Medicines for symptoms and whether they fit the person’s health history.</li>
                     <li>For eligible people with early symptomatic disease and confirmed amyloid, whether an approved treatment such as lecanemab or donanemab is appropriate, including monitoring and risks.</li>
@@ -99,7 +114,7 @@
             <article class="neuro-card care-card">
                 <h2>Parkinson’s disease</h2>
                 <p>Care is individualized around movement and non-movement symptoms, daily function, treatment response, and preferences.</p>
-                <h3>General topics to discuss with a care team</h3>
+                <h3>Possible options</h3>
                 <ul>
                     <li>Symptom-relieving medicines, timing, benefits, and side effects.</li>
                     <li>Physical, occupational, or speech therapy and appropriate exercise support.</li>
@@ -110,7 +125,7 @@
             <article class="neuro-card care-card">
                 <h2>Huntington’s disease</h2>
                 <p>Supportive care can address movement, mood, cognition, communication, nutrition, and changing daily needs.</p>
-                <h3>General topics to discuss with a care team</h3>
+                <h3>Possible options</h3>
                 <ul>
                     <li>Options to manage specific symptoms and how benefits and risks will be reviewed.</li>
                     <li>Physical, occupational, speech, nutrition, and mental-health support.</li>
@@ -125,9 +140,9 @@
                 <li>What does this result measure, and how reliable is it for my situation?</li>
                 <li>Could medications, testing conditions, or other health factors affect it?</li>
                 <li>What are the potential benefits, risks, alternatives, and monitoring needs of each option?</li>
-                <li>Which symptoms or changes should prompt me to contact the care team?</li>
+                <li>Which symptoms or changes should prompt me to contact a clinician?</li>
             </ul>
-            <p class="privacy-note">Values are kept in this browser tab’s session storage for this estimate. They are not sent to Groq or another AI service. This page does not infer or recommend a treatment.</p>
+            <p class="privacy-note">Values are kept in this browser tab’s session storage for this estimate and are not submitted to this page’s server. This page does not infer or recommend a treatment.</p>
         </section>
     </main>
 </div>
@@ -142,8 +157,53 @@
         const estimateStatus = document.getElementById('patient-estimate-status');
         const reviewPoints = document.getElementById('estimate-review-points');
         const careCards = [...document.querySelectorAll('.care-card')];
+        const optionsIntro = document.getElementById('options-intro');
+        const optionsContext = document.getElementById('options-data-context');
+        const optionsList = document.getElementById('options-list');
         const numberText = value => Number.isFinite(value) ? String(value) : 'Not entered';
         const validNumber = value => typeof value === 'number' && Number.isFinite(value);
+        const discussionOptions = {
+            alzheimers: [
+                { title: 'Cognitive symptom medicines', target: 'May modestly help memory or thinking symptoms for some people; benefits and side effects vary.', context: 'The entered memory/daily-function score does not indicate which symptoms are present or whether a medicine is suitable.' },
+                { title: 'Amyloid-targeting medicines (lecanemab or donanemab)', target: 'For some people with early symptomatic Alzheimer’s and confirmed amyloid pathology, these medicines may modestly slow decline on average. They require specialist eligibility review and MRI monitoring because of potentially serious risks.', context: 'The score and any entered PET value here do not confirm eligibility, amyloid status, disease stage, or individual benefit.' },
+                { title: 'Daily-function and caregiver supports', target: 'Routine, safety adaptations, occupational therapy, and practical support may help maintain independence and reduce day-to-day strain.', context: 'A score change is a reason to review current daily needs; this app does not capture which activities are difficult.' }
+            ],
+            parkinsons: [
+                { title: 'Levodopa-based symptom treatment', target: 'Can improve movement symptoms such as slowness and stiffness for many people; benefit duration and side effects differ. It does not establish that progression has stopped.', context: 'A UPDRS score change alone does not show medication response; timing, symptoms, dose, and examination conditions matter.' },
+                { title: 'Physical, occupational, and speech therapy', target: 'May support walking, balance, daily activities, communication, and swallowing according to the person’s needs.', context: 'The score and voice-feature values entered do not identify which therapy goals are needed; a clinical assessment should set them.' },
+                { title: 'Deep-brain stimulation evaluation', target: 'May improve selected motor symptoms or motor fluctuations for carefully selected people; it is not a treatment that stops disease progression.', context: 'The entered score does not establish suitability. Symptoms, medication response, cognition, and other health factors require specialist evaluation.' }
+            ],
+            huntingtons: [
+                { title: 'Chorea symptom medicines', target: 'Tetrabenazine or deutetrabenazine may reduce chorea for some people. Mood effects, sleepiness, other adverse effects, and personal health history need careful review.', context: 'An entered movement score or chorea value does not establish that chorea is troublesome or that these medicines are safe or appropriate.' },
+                { title: 'Mood, sleep, and behavioral symptom care', target: 'When relevant symptoms are present, individualized psychological support and/or medicines may help address them.', context: 'The entered motor score and protein/MRI values do not assess mood, sleep, or behavior; those symptoms must be discussed directly.' },
+                { title: 'Rehabilitation, speech, swallowing, and nutrition support', target: 'A needs-based plan may help maintain mobility, communication, safe swallowing, nutrition, and everyday function.', context: 'The score does not capture these needs. The appropriate focus depends on symptoms and functional assessment.' }
+            ]
+        };
+        function renderDiscussionOptions(diseaseKey, scoreText, markerText) {
+            const options = discussionOptions[diseaseKey];
+            if (!options) return;
+            optionsIntro.textContent = `Possible ${disease} options are listed with their potential targets. They are not ranked or selected by the app.`;
+            const suppliedValues = [scoreText, markerText].filter(Boolean);
+            optionsContext.textContent = suppliedValues.length
+                ? `Your entered information: ${suppliedValues.join(' · ')}. These results are reproduced as entered; they do not establish symptom targets, eligibility, or expected treatment benefit.`
+                : 'No score or other report values were available in this browser tab. These are general condition-related options, not a personal treatment match.';
+            optionsList.replaceChildren();
+            options.forEach(option => {
+                const card = document.createElement('article');
+                card.className = 'option-card';
+                const badge = document.createElement('span');
+                badge.className = 'option-label';
+                badge.textContent = 'Possible topic';
+                const title = document.createElement('h3');
+                title.textContent = option.title;
+                const target = document.createElement('p');
+                target.textContent = option.target;
+                const context = document.createElement('p');
+                context.textContent = option.context;
+                card.append(badge, title, target, context);
+                optionsList.append(card);
+            });
+        }
         try {
             const snapshot = JSON.parse(sessionStorage.getItem(key) || 'null');
             if (!snapshot || typeof snapshot !== 'object') return;
@@ -151,6 +211,8 @@
             status.textContent = `Condition selected on dashboard: ${disease}. Values below are reproduced as entered; they have not been medically interpreted.`;
             const entries = [];
             const reviewItems = [];
+            let scoreContext = '';
+            let markerContext = '';
             let summary = `${disease}: `;
             if (snapshot.score && typeof snapshot.score === 'object') {
                 const earlier = snapshot.score.earlier;
@@ -173,6 +235,7 @@
                 if (scorePresent && validNumber(interval) && interval > 0) {
                     const delta = later - earlier;
                     const annualized = delta / interval;
+                    scoreContext = `${name}: ${numberText(earlier)} → ${numberText(later)} points over ${interval.toFixed(1)} years (change ${delta > 0 ? '+' : ''}${delta.toFixed(2)})`;
                     summary += `${name} changed ${delta > 0 ? '+' : ''}${delta.toFixed(2)} points across ${interval.toFixed(1)} years (${annualized > 0 ? '+' : ''}${annualized.toFixed(2)} points per year). `;
                     reviewItems.push(`Ask the clinician what this score and its change mean in the context of symptoms, assessment conditions, and previous visits.`);
                 } else {
@@ -197,6 +260,7 @@
             }
             if (Array.isArray(snapshot.results)) {
                 const paired = [];
+                const latestMarkers = [];
                 snapshot.results.forEach(result => {
                     if (!result || typeof result !== 'object') return;
                     const earlier = result.earlier;
@@ -211,6 +275,9 @@
                         name: `${result.name || 'Other result'} · most recent report`,
                         value: hasLater ? `${numberText(later)} ${result.unit || ''}`.trim() : 'Not entered'
                     });
+                    if (hasLater) {
+                        latestMarkers.push(`${String(result.name || 'Other result')}: ${numberText(later)} ${String(result.unit || '')}${validNumber(result.min) && validNumber(result.max) ? ` (app-entry bounds ${numberText(result.min)}–${numberText(result.max)})` : ''}`);
+                    }
                     if (hasEarlier && hasLater) {
                         const delta = later - earlier;
                         const unit = String(result.unit || '');
@@ -230,6 +297,7 @@
                     summary += 'no other result had values entered at both timepoints. ';
                     reviewItems.push('If discussing protein or other biomarker results, bring the complete laboratory report, including assay name, units, and reference range.');
                 }
+                markerContext = latestMarkers.slice(0, 4).join('; ');
             }
             entries.forEach(entry => {
                 const item = document.createElement('li');
@@ -250,6 +318,10 @@
             if (reviewItems.length) reviewPoints.hidden = false;
             estimateStatus.textContent = 'Patient-specific inputs are summarized above. This is not a clinical interpretation; no validated model translates these values into a treatment choice. A qualified clinician must assess the patient and determine whether medical intervention is appropriate.';
             const diseaseKey = disease.toLowerCase().replace(/[’']/g, '');
+            const normalizedDisease = diseaseKey.includes('alzheimer') ? 'alzheimers'
+                : diseaseKey.includes('parkinson') ? 'parkinsons'
+                    : diseaseKey.includes('huntington') ? 'huntingtons' : '';
+            renderDiscussionOptions(normalizedDisease, scoreContext, markerContext);
             careCards.forEach(card => {
                 const cardDisease = card.querySelector('h2').textContent.toLowerCase().replace(/[’']/g, '');
                 const selected = cardDisease === diseaseKey;

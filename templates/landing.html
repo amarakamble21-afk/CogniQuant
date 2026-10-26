@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='neuroquant-icon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-responsive.css') }}">
     <meta name="theme-color" content="#0b1118">
     <title>NeuroQuant | Explore brain health research</title>
     <script>
@@ -20,7 +22,8 @@
         .page { width: min(1280px, calc(100% - 64px)); margin: 0 auto; }
         header { height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.08); }
         .brand { display: inline-flex; gap: 11px; align-items: center; font-size: 16px; font-weight: 750; letter-spacing: .02em; }
-        .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid rgba(149,227,193,.48); border-radius: 12px; color: var(--mint); background: rgba(149,227,193,.08); }
+        .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; overflow: hidden; border: 1px solid rgba(149,227,193,.48); border-radius: 12px; background: rgba(149,227,193,.08); }
+        .brand-mark img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
         .page header > nav { display: flex; gap: 26px; align-items: center; color: #bcc9c9; font-size: 14px; }
         .page header > nav a:hover, .text-link:hover { color: var(--mint); }
         .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 20px; border: 1px solid transparent; border-radius: 8px; background: var(--mint); color: #082018; font-weight: 750; transition: transform .2s, background .2s; }
@@ -71,6 +74,15 @@
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 1000px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 1100px) {
+            .hero { gap: 40px; }
+            .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 900px) {
+            .page header > nav { gap: 14px; }
+            .hero { gap: 24px; }
+            .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
         @media (max-width: 760px) { .hero { grid-template-columns: 1fr; gap: 12px; padding: 64px 0 50px; } .visual { min-height: 300px; } .orb { width: 275px; } .pixel-brain { width: min(100%, 330px); } .page header > nav { gap: 12px; } .page header > nav a:not(.button) { display: none; } .section-head { align-items: start; flex-direction: column; } .cards { grid-template-columns: 1fr; } footer { flex-direction: column; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } .card:hover { transform: none; } }
         .page { position:relative; z-index:1; width:min(1280px, calc(100% - 48px)); max-width:1280px; flex:1; margin:0 auto; }
@@ -82,7 +94,8 @@
     <div class="app-shell">
         <canvas class="neural-field" aria-hidden="true"></canvas>
         <div class="page">
-        <header style="justify-content:flex-end">
+        <header style="justify-content:space-between">
+            <a class="brand" href="{{ url_for('landing') }}"><span class="brand-mark"><img src="{{ url_for('static', filename='neuroquant-icon.svg') }}" alt=""></span> NEUROQUANT</a>
             <nav aria-label="Main navigation">
                 {% include 'theme-picker.html' %}
                 <a href="{{ url_for('chat') }}">AI assistant</a>
