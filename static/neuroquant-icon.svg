@@ -1,24 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0d191f"/>
-  <g fill="#95e3c1">
-    <rect x="28" y="8" width="8" height="4"/>
-    <rect x="20" y="12" width="8" height="8"/>
-    <rect x="28" y="12" width="8" height="8"/>
-    <rect x="16" y="20" width="12" height="8"/>
-    <rect x="12" y="28" width="16" height="8"/>
-    <rect x="16" y="36" width="12" height="8"/>
-    <rect x="20" y="44" width="8" height="4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <rect width="64" height="64" rx="14" fill="#241b2a"/>
+  <g fill="#b94383">
+    <rect x="24" y="8" width="8" height="4"/>
+    <rect x="20" y="12" width="24" height="4"/>
+    <rect x="16" y="16" width="32" height="4"/>
+    <rect x="12" y="20" width="40" height="4"/>
+    <rect x="8" y="24" width="48" height="12"/>
+    <rect x="12" y="36" width="40" height="8"/>
+    <rect x="16" y="44" width="32" height="4"/>
+    <rect x="20" y="48" width="24" height="4"/>
+    <rect x="28" y="52" width="8" height="8"/>
   </g>
-  <g fill="#82c8e0">
-    <rect x="36" y="12" width="8" height="8"/>
-    <rect x="36" y="20" width="12" height="8"/>
-    <rect x="36" y="28" width="16" height="8"/>
-    <rect x="36" y="36" width="12" height="8"/>
-    <rect x="36" y="44" width="8" height="4"/>
+  <g fill="#ed83b8">
+    <rect x="24" y="12" width="8" height="4"/>
+    <rect x="32" y="16" width="8" height="4"/>
+    <rect x="16" y="20" width="12" height="4"/>
+    <rect x="36" y="20" width="12" height="4"/>
+    <rect x="12" y="24" width="16" height="8"/>
+    <rect x="36" y="24" width="16" height="8"/>
+    <rect x="16" y="36" width="12" height="4"/>
+    <rect x="36" y="36" width="12" height="4"/>
+    <rect x="20" y="40" width="8" height="4"/>
+    <rect x="36" y="40" width="8" height="4"/>
+    <rect x="24" y="44" width="8" height="4"/>
+    <rect x="32" y="44" width="8" height="4"/>
+    <rect x="28" y="48" width="8" height="4"/>
   </g>
-  <path d="M32 16v28" stroke="#0d191f" stroke-width="3" shape-rendering="crispEdges"/>
-  <g fill="#d9f8eb">
-    <rect x="20" y="24" width="4" height="4"/>
-    <rect x="40" y="32" width="4" height="4"/>
+  <g fill="#ffc0dc">
+    <rect x="24" y="16" width="8" height="4"/>
+    <rect x="40" y="20" width="4" height="4"/>
+    <rect x="16" y="24" width="8" height="4"/>
+    <rect x="40" y="28" width="8" height="4"/>
+    <rect x="20" y="36" width="8" height="4"/>
+    <rect x="36" y="32" width="4" height="4"/>
+  </g>
+  <g fill="#742d66">
+    <rect x="28" y="16" width="4" height="8"/>
+    <rect x="32" y="20" width="4" height="12"/>
+    <rect x="28" y="28" width="4" height="8"/>
+    <rect x="32" y="36" width="4" height="8"/>
+    <rect x="28" y="44" width="4" height="4"/>
+    <rect x="24" y="24" width="4" height="4"/>
+    <rect x="40" y="36" width="4" height="4"/>
+  </g>
+  <g fill="#ffe2ef">
+    <rect x="16" y="28" width="4" height="4"/>
+    <rect x="44" y="24" width="4" height="4"/>
+    <rect x="20" y="40" width="4" height="4"/>
+    <rect x="40" y="44" width="4" height="4"/>
   </g>
 </svg>
