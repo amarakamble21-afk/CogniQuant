@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1118">
+    <title>Research Assistant | NeuroQuant</title>
+    <style>
+        :root { color-scheme: dark; --bg: #0b1118; --surface: #111b23; --line: #23333b; --text: #edf5f2; --muted: #91a3a7; --mint: #95e3c1; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: var(--text); background: var(--bg); font: 14px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .chat-layout { display: flex; min-height: 100vh; }
+        .chat-main { display: flex; min-width: 0; min-height: 100vh; flex: 1; flex-direction: column; }
+        .topbar { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; border-bottom: 1px solid var(--line); }
+        .top-title { display: flex; align-items: center; gap: 11px; }
+        .assistant-mark { display: grid; width: 37px; height: 37px; place-items: center; border: 1px solid rgba(149,227,193,.25); border-radius: 11px; color: var(--mint); background: rgba(149,227,193,.08); font-size: 18px; }
+        .top-title strong { display: block; font-size: 14px; }
+        .top-title small { color: var(--muted); font-size: 11px; }
+        .top-actions { display: flex; align-items: center; gap: 11px; }
+        .online { display: flex; align-items: center; gap: 7px; color: #a9c5b8; font-size: 11px; }
+        .online > span:first-child { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 9px rgba(149,227,193,.65); }
+        .online.offline { color: #e1aaa0; }
+        .online.offline > span:first-child { background: #d97f73; box-shadow: 0 0 9px rgba(217,127,115,.5); }
+        button, textarea { font: inherit; }
+        .clear-button { padding: 8px 11px; border: 1px solid var(--line); border-radius: 7px; color: #b8c7c7; background: transparent; cursor: pointer; }
+        .clear-button:hover { background: rgba(255,255,255,.05); }
+        .conversation { width: min(800px, 100%); flex: 1; margin: 0 auto; padding: 31px 28px 20px; }
+        .intro { margin: 4px 0 25px; }
+        .intro-label { color: var(--mint); font-size: 10px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+        .intro h1 { margin: 7px 0 5px; font-size: 25px; letter-spacing: -.035em; }
+        .intro p { margin: 0; color: var(--muted); font-size: 13px; }
+        .messages { display: grid; gap: 20px; padding-bottom: 16px; }
+        .message { display: flex; align-items: flex-start; gap: 11px; }
+        .message.user { flex-direction: row-reverse; }
+        .avatar { display: grid; width: 31px; height: 31px; flex: 0 0 31px; place-items: center; border: 1px solid #294239; border-radius: 9px; color: var(--mint); background: #12221e; font-size: 13px; }
+        .message.user .avatar { border-color: #283c4a; color: #a9cbdf; background: #15212a; }
+        .bubble { max-width: min(620px, 88%); padding: 12px 15px; border: 1px solid #22323a; border-radius: 3px 12px 12px; color: #d4dfdc; background: var(--surface); white-space: pre-wrap; overflow-wrap: anywhere; }
+        .message.user .bubble { border-color: #234638; border-radius: 12px 3px 12px 12px; color: #e4f1eb; background: #14241f; }
+        .message.error .bubble { border-color: #744544; color: #ffc4b9; }
+        .message-meta { margin: 0 0 5px 43px; color: #71848a; font-size: 10px; }
+        .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 25px 42px; }
+        .suggestion { padding: 8px 11px; border: 1px solid #293a41; border-radius: 999px; color: #adc0bc; background: #111a20; cursor: pointer; font-size: 11px; transition: .15s; }
+        .suggestion:hover { border-color: #5b9c7e; color: var(--mint); }
+        .composer-wrap { position: sticky; bottom: 0; padding: 18px 28px 13px; background: linear-gradient(transparent, var(--bg) 20%); }
+        .composer { display: flex; width: min(800px, 100%); align-items: flex-end; gap: 10px; margin: 0 auto; padding: 10px; border: 1px solid #31434a; border-radius: 12px; background: #111b22; box-shadow: 0 12px 30px rgba(0,0,0,.22); }
+        textarea { display: block; width: 100%; max-height: 150px; min-height: 43px; resize: vertical; padding: 11px 9px; border: 0; outline: 0; color: var(--text); background: transparent; }
+        textarea::placeholder { color: #71848a; }
+        .send-button { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; border: 0; border-radius: 9px; color: #0b2118; background: var(--mint); cursor: pointer; font-size: 19px; transition: .15s; }
+        .send-button:hover { background: #b4f1d4; }
+        .send-button:disabled { opacity: .45; cursor: wait; }
+        .composer-note { width: min(800px, 100%); margin: 8px auto 0; color: #6e8085; text-align: center; font-size: 10px; }
+        .loading-dots { color: var(--mint); letter-spacing: 3px; animation: breathe 1s infinite alternate; }
+        @keyframes breathe { to { opacity: .35; } }
+        @media (max-width: 760px) { .chat-layout { flex-direction: column; } .chat-main { min-height: calc(100vh - 140px); } .topbar { min-height: 62px; padding: 0 16px; } .conversation { padding: 23px 16px 14px; } .composer-wrap { padding: 12px 14px 10px; } .online { display: none; } }
+        .chat-main { position:relative; z-index:1; }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
+</head>
+<body>
+    <div class="chat-layout">
+        <canvas class="neural-field" aria-hidden="true"></canvas>
+        {% include 'panel.html' %}
+        <main class="chat-main">
+            <header class="topbar">
+                <div class="top-title">
+                    <span class="assistant-mark" aria-hidden="true">✧</span>
+                    <div><strong>Research assistant</strong><small>Neuroscience, made conversational</small></div>
+                </div>
+                <div class="top-actions"><div class="online" id="serviceStatus" role="status"><span aria-hidden="true"></span><span id="serviceText">Checking assistant setup…</span></div><button class="clear-button" id="clearChat" type="button">New chat</button></div>
+            </header>
+            <section class="conversation" aria-label="Chat conversation">
+                <div class="intro">
+                    <div class="intro-label">Your research companion</div>
+                    <h1>What would you like to explore?</h1>
+                    <p>Ask a general question about neuroscience or how to use this research prototype.</p>
+                </div>
+                <div class="messages" id="messages" aria-live="polite">
+                    <div class="message assistant"><div class="avatar" aria-hidden="true">✧</div><div class="bubble">Hi! I can help with general neuroscience concepts and explain the tools in this workspace. What are you curious about?</div></div>
+                </div>
+                <div class="suggestions" id="suggestions">
+                    <button class="suggestion" type="button">How does neurodegeneration affect the brain?</button>
+                    <button class="suggestion" type="button">What does a risk score mean here?</button>
+                    <button class="suggestion" type="button">How do I explore the dashboard?</button>
+                </div>
+            </section>
+            <div class="composer-wrap">
+                <form class="composer" id="chatForm">
+                    <textarea id="messageInput" rows="1" maxlength="4000" aria-label="Your message" placeholder="Message the research assistant..."></textarea>
+                    <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
+                </form>
+                <p class="composer-note">AI responses can be inaccurate. This assistant is for education only—not diagnosis or medical advice.</p>
+            </div>
+        </main>
+    </div>
+    <script>
+        const messages = [];
+        const messageList = document.getElementById('messages');
+        const form = document.getElementById('chatForm');
+        const input = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const suggestions = document.getElementById('suggestions');
+        const serviceStatus = document.getElementById('serviceStatus');
+        const serviceText = document.getElementById('serviceText');
+
+        fetch('/api/chat/status')
+            .then(response => {
+                if (!response.ok) throw new Error('Status check failed');
+                return response.json();
+            })
+            .then(status => {
+                serviceText.textContent = status.configured ? 'API key configured · not tested' : 'API key missing';
+                serviceStatus.classList.toggle('offline', !status.configured);
+            })
+            .catch(() => {
+                serviceText.textContent = 'Server unavailable';
+                serviceStatus.classList.add('offline');
+            });
+
+        function addMessage(role, content, isError = false) {
+            const message = document.createElement('div');
+            message.className = `message ${role}${isError ? ' error' : ''}`;
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.setAttribute('aria-hidden', 'true');
+            avatar.textContent = role === 'user' ? 'You' : '✧';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = content;
+            message.append(avatar, bubble);
+            messageList.appendChild(message);
+            message.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return message;
+        }
+
+        async function sendMessage(value) {
+            const content = value.trim();
+            if (!content || sendButton.disabled) return;
+            suggestions.hidden = true;
+            input.value = '';
+            if (messages.length > 18) messages.splice(0, messages.length - 18);
+            messages.push({ role: 'user', content });
+            addMessage('user', content);
+            sendButton.disabled = true;
+            const pending = addMessage('assistant', 'Thinking…');
+            pending.querySelector('.bubble').classList.add('loading-dots');
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'The assistant could not respond.');
+                pending.remove();
+                messages.push({ role: 'assistant', content: result.reply });
+                addMessage('assistant', result.reply);
+                serviceText.textContent = 'API responding';
+                serviceStatus.classList.remove('offline');
+            } catch (error) {
+                pending.remove();
+                addMessage('assistant', error.message || 'Could not reach the assistant. Please try again.', true);
+                serviceText.textContent = 'API request failed';
+                serviceStatus.classList.add('offline');
+            } finally {
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            sendMessage(input.value);
+        });
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+        suggestions.addEventListener('click', event => {
+            if (event.target.matches('.suggestion')) sendMessage(event.target.textContent);
+        });
+        document.getElementById('clearChat').addEventListener('click', () => {
+            messages.length = 0;
+            messageList.replaceChildren();
+            addMessage('assistant', 'Hi! I can help with general neuroscience concepts and explain the tools in this workspace. What are you curious about?');
+            suggestions.hidden = false;
+            input.focus();
+        });
+    </script>
+    <script src="{{ url_for('static', filename='neural-network.js') }}"></script>
+</body>
+</html>

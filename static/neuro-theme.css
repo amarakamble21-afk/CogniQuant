@@ -1,0 +1,130 @@
+:root {
+    color-scheme: dark;
+    --neuro-bg: #0b1118;
+    --neuro-surface: #111b24;
+    --neuro-surface-raised: #15232b;
+    --neuro-border: #263840;
+    --neuro-text: #edf5f2;
+    --neuro-muted: #97a9ad;
+    --neuro-accent: #95e3c1;
+    --neuro-accent-deep: #193b31;
+    --neuro-blue: #83c4d4;
+    --neuro-glass: rgba(17, 31, 38, .72);
+    --neuro-glass-edge: rgba(207, 255, 235, .16);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { font-family: inherit; }
+body { background: var(--neuro-bg); color: var(--neuro-text); }
+.app-shell { position: relative; display: flex; min-height: 100vh; isolation: isolate; }
+.neural-field { position: fixed; z-index: 0; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .28; }
+body:has(.neural-field) { background: radial-gradient(ellipse at 75% 14%, rgba(39, 110, 91, .17), transparent 36%), var(--neuro-bg); }
+.app-sidebar { position: sticky; z-index: 2; top: 0; align-self: flex-start; height: 100vh; min-height: 520px; overflow-y: auto; }
+.app-sidebar {
+    border-right-color: rgba(169, 226, 206, .14) !important;
+    background: linear-gradient(165deg, rgba(15, 30, 36, .88), rgba(10, 19, 26, .78)) !important;
+    box-shadow: 12px 0 48px rgba(0, 0, 0, .18), inset -1px 0 rgba(215, 255, 240, .04);
+    backdrop-filter: blur(24px) saturate(145%);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
+}
+.sidebar-mark, .assistant-mark {
+    box-shadow: 0 0 24px rgba(117, 235, 188, .14), inset 0 1px rgba(255, 255, 255, .2);
+}
+.sidebar-links a { transition: transform .2s ease, color .2s ease, background .2s ease, border-color .2s ease !important; }
+.sidebar-links a:hover { transform: translateX(3px); }
+.workspace-main { position: relative; z-index: 1; width: min(100%, 1600px); min-width: 0; flex: 1; margin: 0 auto; padding: 26px clamp(18px, 3vw, 42px) 36px; }
+
+body:has(.workspace-main) { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+body:has(.workspace-main) header { border-color: var(--neuro-border); }
+body:has(.workspace-main) h1 { color: var(--neuro-accent); }
+body:has(.workspace-main) p.subtitle,
+body:has(.workspace-main) .page-nav-label,
+body:has(.workspace-main) .metric-sub { color: var(--neuro-muted); }
+body:has(.workspace-main) .panel,
+body:has(.workspace-main) .metric-card,
+body:has(.workspace-main) .info-card,
+body:has(.workspace-main) .tab-btn,
+body:has(.workspace-main) select,
+body:has(.workspace-main) input[type="number"],
+body:has(.workspace-main) .json-box { color: var(--neuro-text); background: var(--neuro-surface); border-color: var(--neuro-border); }
+body:has(.workspace-main) .panel,
+body:has(.workspace-main) .metric-card,
+body:has(.workspace-main) .info-card,
+body:has(.workspace-main) .brain-viewer-panel,
+body:has(.workspace-main) .neuro-card {
+    border-color: var(--neuro-glass-edge);
+    background: linear-gradient(145deg, rgba(26, 45, 52, .78), rgba(12, 24, 31, .76));
+    box-shadow: 0 22px 55px rgba(0, 0, 0, .2), inset 0 1px rgba(255, 255, 255, .07);
+    backdrop-filter: blur(18px) saturate(135%);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+body:has(.workspace-main) .metric-card { transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+body:has(.workspace-main) .metric-card:hover { transform: translateY(-3px); border-color: rgba(149, 227, 193, .32); }
+body:has(.workspace-main) .chart-box,
+body:has(.workspace-main) .simulator-chart { padding: 8px; border: 1px solid rgba(207, 255, 235, .08); border-radius: 14px; background: rgba(9, 19, 25, .32); }
+body:has(.workspace-main) input[type="number"],
+body:has(.workspace-main) select,
+body:has(.workspace-main) .page-nav a,
+body:has(.workspace-main) button.secondary {
+    background: rgba(12, 26, 32, .72);
+    backdrop-filter: blur(12px);
+}
+body:has(.workspace-main) .brain-viewer-panel { overflow: hidden; }
+body:has(.workspace-main) .gl-container { background: radial-gradient(ellipse at 50% 45%, rgba(63, 133, 116, .13), transparent 62%); }
+body:has(.workspace-main) .brain-component-wrapper.pulse-on .gl-container { animation: neural-bloom 5s ease-in-out infinite; }
+@keyframes neural-bloom {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(95, 230, 181, .04)); }
+    50% { filter: drop-shadow(0 0 18px rgba(95, 230, 181, .18)); }
+}
+body:has(.workspace-main) .metric-value,
+body:has(.workspace-main) .val-display,
+body:has(.workspace-main) .info-card h4 { color: var(--neuro-accent); }
+body:has(.workspace-main) button.primary,
+body:has(.workspace-main) .tab-btn.active { color: #092017; background: var(--neuro-accent); border-color: var(--neuro-accent); }
+body:has(.workspace-main) button.primary:hover { background: #b4f1d3; }
+body:has(.workspace-main) .page-nav a,
+body:has(.workspace-main) button.secondary { color: #d8e5e0; background: #142129; border-color: var(--neuro-border); }
+body:has(.workspace-main) .page-nav a:hover,
+body:has(.workspace-main) button.secondary:hover { color: var(--neuro-accent); border-color: #548c73; }
+body:has(.workspace-main) .brain-viewer-panel { background: #101a21; border-color: var(--neuro-border); }
+body:has(.workspace-main) .brain-viewer-header h2,
+body:has(.workspace-main) .brain-controls,
+body:has(.workspace-main) .brain-controls label { color: var(--neuro-text); }
+body:has(.workspace-main) .brain-note { color: var(--neuro-muted); }
+body:has(.workspace-main) .disclaimer { color: #f2c5bd; background: #2b1b20; border-color: #71434a; }
+body:has(.workspace-main) .source-tag { color: #b6dfd0; background: #182b29; border-color: #34564b; }
+body:has(.workspace-main) .source-tag.warn { color: #f0d99b; background: #2b281b; border-color: #6a5b34; }
+
+.neuro-card { border: 1px solid var(--neuro-border); border-radius: 13px; background: linear-gradient(145deg, rgba(21,35,43,.96), rgba(15,25,32,.94)); box-shadow: 0 16px 42px rgba(0,0,0,.16); }
+.chat-main .topbar {
+    border-bottom-color: rgba(169, 226, 206, .13);
+    background: rgba(10, 20, 27, .58);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+}
+.chat-main .bubble,
+.chat-main .composer {
+    border-color: rgba(195, 245, 224, .15);
+    background: rgba(19, 35, 42, .72);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, .14), inset 0 1px rgba(255, 255, 255, .04);
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+}
+.chat-main .message.user .bubble { background: linear-gradient(135deg, rgba(28, 65, 54, .82), rgba(18, 39, 36, .84)); }
+.chat-main .suggestion { background: rgba(15, 29, 35, .66); backdrop-filter: blur(12px); }
+.chat-main .composer-wrap { background: linear-gradient(transparent, rgba(8, 16, 22, .96) 28%); }
+.neuro-eyebrow { color: var(--neuro-accent); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.neuro-small { color: var(--neuro-muted); font-size: 12px; line-height: 1.6; }
+
+@media (max-width: 760px) {
+    .app-shell { flex-direction: column; }
+    .app-sidebar { position: relative; top: auto; height: auto; min-height: auto; align-self: stretch; }
+    .workspace-main { padding: 19px 14px 28px; }
+    .app-sidebar { backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .neural-field { opacity: .12; }
+    .sidebar-links a, body:has(.workspace-main) .metric-card { transition: none !important; }
+    .sidebar-links a:hover, body:has(.workspace-main) .metric-card:hover { transform: none; }
+    body:has(.workspace-main) .brain-component-wrapper.pulse-on .gl-container { animation: none; }
+}

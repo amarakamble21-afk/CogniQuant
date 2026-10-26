@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroQuant | Progression Trend Explorer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0b0f19; color: #f3f4f6; padding: 24px; max-width: 1500px; margin: 0 auto; }
+        header { margin-bottom: 24px; border-bottom: 1px solid #1f2937; padding-bottom: 16px; }
+        .page-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -8px 0 22px; }
+        .page-nav-label { color: #9ca3af; font-size: 12px; }
+        .page-nav-links { display: flex; flex-wrap: wrap; gap: 8px; }
+        .page-nav a { display: inline-flex; min-height: 35px; align-items: center; padding: 0 11px; border: 1px solid #374151; border-radius: 7px; color: #d1d5db; background: #111827; font-size: 12px; text-decoration: none; }
+        .page-nav a:hover { border-color: #60a5fa; color: #bfdbfe; }
+        h1 { font-size: 24px; color: #60a5fa; margin-bottom: 6px; }
+        h2.section { font-size: 18px; margin: 32px 0 12px; color: #e5e7eb; }
+        p.subtitle { color: #9ca3af; font-size: 14px; }
+
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+        @media (max-width: 980px) { .container { grid-template-columns: 1fr; } }
+        .panel { background-color: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 20px; }
+
+        .form-group { margin-bottom: 18px; }
+        label.lbl, .form-group > label { display: block; font-size: 13px; font-weight: 600; color: #d1d5db; margin-bottom: 6px; }
+        select, input[type="number"] { width: 100%; padding: 10px; background-color: #1f2937; border: 1px solid #374151; color: #fff; border-radius: 6px; font-size: 14px; }
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        input[type="range"] { flex: 1; accent-color: #60a5fa; }
+        .val-display { font-weight: bold; color: #60a5fa; width: 55px; text-align: right; }
+
+        button.primary { width: 100%; padding: 12px; background-color: #2563eb; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button.primary:hover { background-color: #1d4ed8; }
+        button.secondary { padding: 8px 12px; background: #1f2937; color: #e5e7eb; border: 1px solid #374151; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        button.secondary:hover { background: #273244; }
+        button.secondary.on { background: #1e3a5f; border-color: #60a5fa; }
+        .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        @media (max-width: 700px) { .metrics-grid { grid-template-columns: 1fr; } }
+        .metric-card { background-color: #1f2937; padding: 16px; border-radius: 8px; border: 1px solid #374151; }
+        .metric-title { font-size: 12px; color: #9ca3af; font-weight: bold; text-transform: uppercase; }
+        .metric-value { font-size: 28px; font-weight: bold; margin-top: 6px; color: #38bdf8; }
+        .metric-sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+        .risk-explanation { margin: 0 0 18px; padding: 12px 14px; border: 1px solid rgba(131,196,212,.3); border-left: 4px solid #83c4d4; border-radius: 9px; color: #c7d5d0; background: rgba(76,143,155,.08); font-size: 13px; line-height: 1.55; }
+        .change-review { margin: 0 0 10px; padding: 14px 16px; border: 1px solid #52616a; border-left: 5px solid #82949c; border-radius: 10px; color: #e3f1ec; background: rgba(110,130,140,.1); }
+        .change-review[data-level="review"] { border-color: #b87524; border-left-color: #f2a541; background: rgba(242,165,65,.1); }
+        .change-review[data-level="large"] { border-color: #b94444; border-left-color: #ef5555; background: rgba(239,85,85,.12); }
+        .change-review[data-level="lower"] { border-color: #37815c; border-left-color: #50c27d; background: rgba(80,194,125,.1); }
+        .change-review strong { display: block; margin-bottom: 4px; font-size: 15px; }
+        .change-review p { margin: 0; font-size: 13px; line-height: 1.55; color: #c7d5d0; }
+        .measure-definitions { margin-top: 16px; padding: 14px; border: 1px solid rgba(207,255,235,.12); border-radius: 10px; background: rgba(9,20,26,.28); }
+        .measure-definitions summary { color: #95e3c1; font-weight: 700; cursor: pointer; }
+        .measure-definitions dl { display: grid; grid-template-columns: minmax(150px,.55fr) 1.45fr; gap: 8px 14px; margin: 12px 0 0; font-size: 13px; line-height: 1.5; }
+        .measure-definitions dt { color: #e3f1ec; font-weight: 700; }
+        .measure-definitions dd { margin: 0; color: #aebdc0; }
+        .range-control label strong, .biomarker-slider label strong { color: #e3f1ec; }
+        @media (max-width: 560px) { .measure-definitions dl { grid-template-columns: 1fr; gap: 3px; } .measure-definitions dd { margin-bottom: 8px; } }
+
+        .charts-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+        .chart-box { height: 240px; position: relative; }
+
+        .info-card { background-color: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 16px; margin-top: 16px; font-size: 13px; line-height: 1.5; }
+        .info-card h4 { color: #60a5fa; margin-bottom: 8px; font-size: 15px; }
+        .info-card ul { padding-left: 18px; margin-top: 6px; }
+        .json-box { background-color: #030712; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #a7f3d0; border: 1px solid #1f2937; margin-top: 10px; white-space: pre-wrap; }
+        .disclaimer { margin-top: 24px; background-color: rgba(45, 31, 31, .72); border: 1px solid rgba(220, 110, 105, .45); color: #f1c2bc; padding: 14px 16px; border-radius: 14px; font-size: 12px; }
+        #history-search { max-width: 240px; padding: 8px 10px; border: 1px solid #374151; border-radius: 7px; color: #edf5f2; background: #111b24; }
+        #actionStatus { min-height: 18px; margin-top: 8px; color: #95e3c1; }
+        .source-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #1e293b; color: #93c5fd; border: 1px solid #334155; }
+        .source-tag.warn { color: #fcd34d; border-color: #78560f; background: #2a2108; }
+        .disease-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0; border: 0; }
+        .disease-picker legend { margin-bottom: 10px; color: #d1d5db; font-size: 13px; font-weight: 700; }
+        .disease-option { min-height: 58px; padding: 12px 14px; text-align: left; border: 1px solid #33464b; border-radius: 12px; color: #dce9e4; background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); cursor: pointer; }
+        .disease-option[aria-pressed="true"] { border-color: #95e3c1; background: rgba(54, 119, 91, .28); box-shadow: 0 0 0 1px rgba(149,227,193,.18), inset 0 1px rgba(255,255,255,.1); color: #b6f0d4; }
+        .disease-option:focus-visible { outline: 2px solid #95e3c1; outline-offset: 2px; }
+        .disease-overview { margin-top: 18px; padding: 18px; border: 1px solid rgba(207,255,235,.16); border-radius: 14px; background: rgba(10,22,27,.48); }
+        .disease-overview h3 { margin: 0 0 12px; color: #95e3c1; }
+        .disease-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+        .disease-overview h4 { margin: 0 0 6px; color: #dce9e4; font-size: 13px; }
+        .disease-overview p { color: #aebdc0; font-size: 13px; line-height: 1.6; }
+        .disease-overview a, .disease-sources a { color: #9ee7c6; }
+        .disease-sources { margin-top: 12px; font-size: 12px; color: #97a9ad; }
+        .dataset-reference { margin-top: 14px; padding: 11px 12px; border: 1px solid rgba(131,196,212,.18); border-radius: 10px; color: #b7d1d4; background: rgba(76,143,155,.06); font-size: 12px; line-height: 1.6; }
+        .biomarker-sliders { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-top: 12px; }
+        .genetic-context-slider { margin-top: 12px; padding: 12px; border: 1px solid rgba(207,255,235,.12); border-radius: 10px; background: rgba(255,255,255,.025); }
+        .biomarker-slider { padding: 12px; border: 1px solid rgba(207,255,235,.12); border-radius: 10px; background: rgba(255,255,255,.025); }
+        .biomarker-report-hint { margin: 4px 0 10px; line-height: 1.5; }
+        .biomarker-slider label { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #dce9e4; }
+        .biomarker-slider output { color: #95e3c1; font-variant-numeric: tabular-nums; }
+        .biomarker-slider input { display: block; width: 100%; margin-top: 8px; }
+        .biology-context select { width: 100%; margin-top: 10px; padding: 10px; border: 1px solid rgba(207,255,235,.16); border-radius: 8px; color: #edf5f2; background: rgba(9,20,26,.58); }
+        .biomarker-note { margin-top: 12px; padding: 10px 12px; border-left: 2px solid #d2b779; color: #c7c4b1; background: rgba(210,183,121,.06); font-size: 12px; line-height: 1.55; }
+        @media (max-width: 700px) { .disease-picker { grid-template-columns: 1fr; } .disease-overview-grid, .biomarker-sliders { grid-template-columns: 1fr; } }
+
+        /* Progression tracker tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #374151; background: #1f2937; color: #e5e7eb; border-radius: 6px; font-size: 13px; }
+        .tab-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+        .tracker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 16px; }
+        .tracker-grid .form-group { margin-bottom: 0; }
+
+        table.history { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.history th, table.history td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #1f2937; }
+        table.history th { color: #9ca3af; font-size: 12px; text-transform: uppercase; }
+
+        /* 3D Brain Component Styles */
+        .brain-viewer-panel { background: #1d1a22; border: 1px solid #39323c; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .brain-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px 0; }
+        .brain-viewer-header h2 { font-size: 17px; margin: 0; color: #f2e5dc; }
+        #component-pulse-toggle { width: auto; padding: 6px 10px; color: #f8e9df; background: #49333a; border: 1px solid #96636b; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px; transition: background 0.2s; }
+        #component-pulse-toggle:hover { background: #5c3f4a; }
+        .brain-component-wrapper.pulse-on .gl-container { transform-origin: center; animation: tissue-pulse 1.1s ease-in-out infinite; }
+        @keyframes tissue-pulse {
+            0%, 100% { filter: brightness(1) saturate(1.01); transform: scale(1); }
+            18% { filter: brightness(1.04) saturate(1.05); transform: scale(1.008); }
+            38% { filter: brightness(1.02) saturate(1.025); transform: scale(1.003); }
+            54% { filter: brightness(1) saturate(1.01); transform: scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) { .brain-component-wrapper.pulse-on .gl-container { animation: none; } }
+        .brain-controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; padding: 0 18px 10px; color: #f2e5dc; font-size: 13px; }
+        .brain-controls label { display: flex; align-items: center; gap: 8px; margin: 0; color: #f2e5dc; font-weight: 400; }
+        .brain-controls input[type=range] { width: 160px; accent-color: #d9a9a1; }
+        .brain-controls input[type=checkbox] { width: auto; }
+        .brain-controls input:disabled { opacity: .4; }
+        .brain-views button { padding: 4px 10px; margin-right: 4px; font-size: 12px; color: #f8e9df; background: #49333a; border: 1px solid #96636b; border-radius: 6px; cursor: pointer; }
+        .brain-views button:hover { background: #5c3f4a; }
+        .brain-note { margin: 8px 18px 12px; font-size: 13px; color: #c9bdc0; }
+        .simulator, .trend-workspace { margin-top: 20px; padding: 20px; }
+        .simulator-header { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+        .simulator-header h3, .genomics h3 { margin:0 0 5px; font-size:17px; color:#edf5f2; }
+        .simulator-grid { display:grid; grid-template-columns:minmax(230px,.8fr) minmax(300px,1.2fr); gap:20px; align-items:center; }
+        .trend-layout { display:grid; grid-template-columns:minmax(250px,.72fr) minmax(360px,1.28fr); gap:22px; align-items:start; }
+        .trend-inputs { display:grid; gap:9px; }
+        .trend-inputs .btn-row { align-items:stretch; }
+        .trend-inputs .btn-row button.primary { width:auto; flex:1 1 150px; }
+        .trend-inputs .btn-row button.secondary { flex:1 1 130px; }
+        .trend-inputs label { margin-top:5px; color:#dce9e5; font-size:12px; font-weight:650; }
+        .trend-inputs select, .trend-inputs input:not([type="range"]) { width:100%; min-height:42px; padding:10px 12px; color:#edf5f2; border:1px solid rgba(207,255,235,.16); border-radius:10px; background:rgba(9,20,26,.58); }
+        .range-control { display:grid; gap:5px; padding:8px 10px; border:1px solid rgba(207,255,235,.09); border-radius:10px; background:rgba(9,20,26,.28); }
+        .range-control label { display:flex; justify-content:space-between; gap:10px; margin:0; color:#dce9e5; font-size:12px; }
+        .range-control output { color:#95e3c1; font-weight:750; font-variant-numeric:tabular-nums; }
+        .range-control input[type="range"] { width:100%; min-height:24px; margin:0; accent-color:#95e3c1; }
+        .range-control input:disabled { opacity:.42; }
+        .biology-context { margin-top:14px; padding:14px; border:1px solid rgba(207,255,235,.12); border-radius:12px; background:rgba(9,20,26,.35); color:#dce9e5; }
+        .biology-context summary { cursor:pointer; font-size:13px; font-weight:700; }
+        .biology-context > p { margin-top:9px; }
+        .biology-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+        .biology-grid label { display:grid; gap:5px; color:#dce9e5; font-size:11px; }
+        .biology-grid input, .biology-grid select { width:100%; min-width:0; padding:9px 10px; border:1px solid rgba(207,255,235,.16); border-radius:8px; color:#edf5f2; background:rgba(9,20,26,.58); }
+        @media (max-width:700px) { .biology-grid { grid-template-columns:1fr; } }
+        .trend-output .metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .trend-output .metric-card { padding:13px; }
+        .trend-output .metric-value { font-size:22px; }
+        .trend-chart { height:350px; padding:10px; border:1px solid rgba(207,255,235,.1); border-radius:15px; background:rgba(9,19,25,.3); }
+        .combined-measure-inputs, .combined-trend-figure { margin-top:18px; padding:16px; border:1px solid rgba(207,255,235,.12); border-radius:14px; background:rgba(9,20,26,.32); }
+        .combined-measure-inputs h3, .combined-trend-figure h3 { margin:0 0 8px; color:#e3f1ec; font-size:15px; }
+        .combined-trend-figure > p { margin-bottom:14px; }
+        .trend-status { min-height:24px; color:#a7d7c2; font-size:12px; line-height:1.5; }
+        .treatment-note, .treatment-reference { padding:13px 14px; border:1px solid rgba(207,255,235,.12); border-radius:12px; color:#b6c9c3; background:rgba(9,20,26,.42); font-size:12px; line-height:1.65; }
+        .treatment-note strong, .treatment-reference strong { color:#e9f5f0; }
+        .treatment-note a, .treatment-reference a { color:#a9e7cb; text-decoration:underline; text-underline-offset:2px; }
+        .treatment-reference { margin-top:12px; border-color:rgba(149,227,193,.24); }
+        @media (max-width: 980px) { .trend-layout { grid-template-columns:1fr; } }
+        @media (max-width: 700px) { .trend-output .metrics-grid { grid-template-columns:1fr; } .trend-chart { height:250px; } }
+        .intervention-control { margin:12px 0; }
+        .intervention-control label { display:flex; justify-content:space-between; gap:12px; margin-bottom:6px; color:#d5e2de; font-size:12px; }
+        .intervention-control output { color:#95e3c1; font-weight:700; }
+        .intervention-control input { width:100%; accent-color:#95e3c1; }
+        .simulator-chart { height:235px; }
+        .simulator-stat { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:10px; color:#a6b8b4; font-size:12px; }
+        .simulator-stat strong { color:#95e3c1; }
+        .evidence-links { margin-top:11px; color:#8fa3a5; font-size:11px; line-height:1.7; }
+        .evidence-links a { color:#a9dcc6; text-decoration:underline; text-underline-offset:2px; }
+        .genomics select { width:100%; margin:9px 0; padding:10px; border:1px solid #263840; border-radius:7px; color:#edf5f2; background:#111b24; }
+        .variant-description { min-height:68px; color:#a6b8b4; font-size:12px; line-height:1.65; }
+        .variant-tag { display:inline-block; margin:4px 5px 0 0; padding:4px 8px; border:1px solid #335448; border-radius:99px; color:#b3e8ce; background:#142720; font-size:10px; }
+        .simulator-warning { padding:10px 12px; border-left:2px solid #87c7ad; color:#adc0bb; background:rgba(149,227,193,.045); font-size:11px; line-height:1.6; }
+        @media (max-width: 800px) { .simulator-grid,.genomics-grid { grid-template-columns:1fr; } }
+        .genomics { margin-top:20px; padding:20px; }
+        .genomics-grid { display:grid; grid-template-columns:minmax(210px,.72fr) minmax(300px,1.28fr); gap:18px; align-items:start; }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
+</head>
+<body>
+<div class="app-shell">
+    <canvas class="neural-field" aria-hidden="true"></canvas>
+    {% include 'panel.html' %}
+    <main class="workspace-main">
+
+<header>
+    <h1>Progression Trend Explorer</h1>
+    <p class="subtitle">Explore measured clinical-score change over time. Projections are mathematical illustrations, not individual medical forecasts.</p>
+</header>
+<nav class="page-nav" aria-label="Page navigation">
+    <span class="page-nav-label">Research workspace</span>
+    <div class="page-nav-links">
+        <a href="{{ url_for('landing') }}">← Back to landing page</a>
+        <a href="{{ url_for('chat') }}">Open AI assistant</a>
+    </div>
+</nav>
+
+<section class="trend-workspace neuro-card" id="progression-outlook" aria-labelledby="progression-title">
+    <div class="simulator-header">
+        <div>
+            <div class="neuro-eyebrow">Progression outlook</div>
+            <h2 id="progression-title">Score and test-result overview</h2>
+            <p class="neuro-small">Choose a condition, enter named test scores and any available report values, and review each measure on its own graph. Select a measure below for a plain-language definition.</p>
+        </div>
+        <span class="variant-tag">Not a clinical prediction</span>
+    </div>
+    <fieldset class="disease-picker" aria-label="Choose disease workflow">
+        <legend>Choose a disease</legend>
+        <button class="disease-option" type="button" data-disease-option="alzheimers" aria-pressed="{{ 'true' if selected_disease == 'alzheimers' else 'false' }}">Alzheimer’s disease</button>
+        <button class="disease-option" type="button" data-disease-option="parkinsons" aria-pressed="{{ 'true' if selected_disease == 'parkinsons' else 'false' }}">Parkinson’s disease</button>
+        <button class="disease-option" type="button" data-disease-option="huntingtons" aria-pressed="{{ 'true' if selected_disease == 'huntingtons' else 'false' }}">Huntington’s disease</button>
+    </fieldset>
+    <div class="trend-layout">
+        <div class="trend-inputs">
+            <p class="neuro-small" id="scale-note"></p>
+            <p class="neuro-small">Use the same assessment scale and similar testing conditions for both reports. No scores are prefilled as patient measurements.</p>
+            <div class="range-control">
+                <label for="observed-start">Earlier report · <strong id="score-input-name-earlier">clinical score</strong> <output id="observed-start-value">—</output></label>
+                <input id="observed-start" type="range" min="0" max="108" step="0.1" value="0">
+            </div>
+            <div class="range-control">
+                <label for="observed-latest">Most recent report · <strong id="score-input-name-latest">clinical score</strong> <output id="observed-latest-value">—</output></label>
+                <input id="observed-latest" type="range" min="0" max="108" step="0.1" value="0">
+            </div>
+            <div class="range-control">
+                <label for="observation-years">Time between <strong>score reports</strong> <output id="observation-years-value">—</output></label>
+                <input id="observation-years" type="range" min="0.1" max="10" step="0.1" value="1">
+            </div>
+            <div class="range-control">
+                <label for="patient-age"><strong>Age</strong> (optional context) <output id="patient-age-value">Not entered</output></label>
+                <input id="patient-age" type="range" min="18" max="100" step="1" value="65">
+            </div>
+            <p class="neuro-small">Age is not used to calculate the score change or feature index. Set it only if you want it included as context in your saved report.</p>
+            <label for="projection-years"><strong>Projection time window</strong></label>
+            <select id="projection-years">
+                <option value="1">1 year</option>
+                <option value="5" selected>5 years</option>
+                <option value="10">10 years</option>
+            </select>
+            <label for="whatif-treatment"><strong>Treatment comparison</strong> (educational context)</label>
+            <select id="whatif-treatment"></select>
+            <div class="treatment-note" id="treatment-evidence" aria-live="polite"></div>
+            <div class="treatment-reference" id="treatment-reference" hidden></div>
+            <div class="btn-row">
+                <button class="primary" id="calculate-trend" type="button">Calculate trend</button>
+                <button class="secondary" id="save-trend" type="button" disabled>Save trend</button>
+                <button class="secondary" id="download-trend" type="button" disabled>Download report</button>
+            </div>
+            <p class="trend-status" id="simulator-validation" role="status" aria-live="polite">Enter values from both clinical score reports to draw the score line. Feature values can be graphed separately.</p>
+        </div>
+        <div class="trend-output">
+            <div class="metrics-grid">
+                <div class="metric-card"><div class="metric-title">Score change per year</div><div class="metric-value" id="observed-slope">—</div><div class="metric-sub" id="slope-caption">Change in the selected score, in points per year</div></div>
+                <div class="metric-card"><div class="metric-title">Score change per year (% of scale)</div><div class="metric-value" id="score-range-rate">—</div><div class="metric-sub">Normalized score change; not percent neuron loss</div></div>
+                <div class="metric-card"><div class="metric-title">Score direction</div><div class="metric-value" id="trend-status">—</div><div class="metric-sub" id="trend-status-caption">Change between the two reports only</div></div>
+                <div class="metric-card"><div class="metric-title">Illustrative score at selected time</div><div class="metric-value" id="projected-score">—</div><div class="metric-sub" id="projection-caption">Straight-line extension, not a forecast</div></div>
+                <div class="metric-card"><div class="metric-title">Treatment comparison value</div><div class="metric-value" id="scenario-score">—</div><div class="metric-sub" id="scenario-caption">Group average shown only when available</div></div>
+                <div class="metric-card"><div class="metric-title">Average feature change per year</div><div class="metric-value" id="combined-index-rate">—</div><div class="metric-sub" id="combined-index-caption">Average change as % of app entry range</div></div>
+                <div class="metric-card"><div class="metric-title">Score-change band</div><div class="metric-value" id="risk-category">Not assessed</div><div class="metric-sub">A color-coded change estimate; not disease risk.</div></div>
+            </div>
+            <div class="change-review" id="change-review" data-level="neutral" role="status" aria-live="polite">
+                <strong id="change-review-title">No score change assessed yet</strong>
+                <p id="change-review-detail">Enter two scores from the same assessment scale. This prompt cannot measure neuron loss or determine personal risk.</p>
+            </div>
+            <p class="risk-explanation"><strong>Important:</strong> The color bands are estimates of the entered score change, not a validated “high,” “moderate,” or “stable” neurodegeneration or personal risk rating. They do not measure neuron loss. Results can vary with disease stage, assessor, medication timing, test conditions, and time between reports. A clinician should interpret the result.</p>
+            <div class="combined-trend-figure" id="clinical-trend-figure">
+                <h3 id="clinical-chart-title">Your test-score change rate</h3>
+                <p class="neuro-small" id="clinical-chart-description">This graph shows the selected score’s change from your most recent report, as a percentage of the score’s full range. It is a normalized score trend—not a percentage of neuron loss.</p>
+                <div class="trend-chart"><canvas id="simulatorChart" aria-label="Normalized clinical score change over time"></canvas></div>
+                <p class="neuro-small" id="clinical-index-summary" aria-live="polite">Enter both score values to see the graph.</p>
+            </div>
+            <div class="combined-trend-figure" id="feature-trend-figure">
+                <h3>Other report results</h3>
+                <p class="neuro-small">Each colored line shows how one entered test result changed from the earlier report. The gold line shows the average size of those changes as a percentage of the app’s entry ranges. It is only a math summary, not a medical score or forecast.</p>
+                <div class="trend-chart"><canvas id="biomarkerChart" aria-label="Separate graph of entered biomarker and other measured feature changes"></canvas></div>
+                <p class="neuro-small" id="combined-index-summary" aria-live="polite">Enter earlier and recent values for at least one feature to see this graph and its exploratory index.</p>
+            </div>
+            <div class="combined-measure-inputs">
+                <h3>Enter test scores and report results</h3>
+                <p class="neuro-small" id="biomarker-intro"></p>
+                <div id="genetic-context-slider"></div>
+                <div class="biomarker-sliders" id="biomarker-slider-fields"></div>
+                <div class="range-control">
+                    <label for="biomarker-years">Time between <strong>feature reports</strong> <output id="biomarker-years-value">1.0 years</output></label>
+                    <input id="biomarker-years" type="range" min="0.1" max="10" step="0.1" value="1">
+                </div>
+                <p class="biomarker-note" id="biomarker-note" aria-live="polite"></p>
+            </div>
+            <details class="measure-definitions">
+                <summary>Definitions of scores, tests, and graph terms</summary>
+                <dl id="measure-definitions"></dl>
+                <p class="neuro-small"><strong>Formula and evidence:</strong> Standard percentage-change methods compare a follow-up score with the starting score and therefore depend on the starting value. This app instead divides by the full score range so the calculation also works when the starting score is zero. That range-normalized formula is an app-defined description, not a published biological neurodegeneration formula or validated personal estimate. The separate CDR-SB and original UPDRS Part III change references are clinical score references, not thresholds for neuron loss. <span id="method-reference-links"></span></p>
+            </details>
+            <p class="simulator-warning" id="science-note"><strong>Clinical score percentage formula:</strong> (most recent score − earlier score) ÷ full score range × 100 ÷ years between reports. The result is signed % of the scale range per year. It is a transparent, app-defined normalization of the test score—not a published biological formula, percent neurodegeneration, percent neuron loss, prognosis, or personal risk. The separate feature summary averages absolute changes in entered non-clinical results, each divided by its app entry range and elapsed years. A treatment line, when available, shows a group average for context only—not an expected personal response.</p>
+            <p class="neuro-small" id="plain-language-result" aria-live="polite">Enter your report values to see the clinical score trend.</p>
+            <section class="disease-overview" aria-labelledby="disease-info-title">
+                <h3 id="disease-info-title">Disease information</h3>
+                <div class="disease-overview-grid">
+                    <div><h4>What the supplied data measures</h4><p id="disease-data-description"></p></div>
+                    <div><h4>Possible causes and contributing factors</h4><p id="disease-causes"></p></div>
+                    <div><h4>Treatment approaches</h4><p id="disease-treatments"></p></div>
+                    <div><h4>How to read your result</h4><p id="disease-result-help"></p></div>
+                </div>
+                <p class="dataset-reference" id="dataset-rate-description"></p>
+                <p class="disease-sources" id="disease-sources"></p>
+            </section>
+        </div>
+    </div>
+</section>
+
+        <section class="genomics neuro-card" id="genomics" aria-labelledby="genomics-title">
+            <div class="simulator-header">
+                <div><div class="neuro-eyebrow">Genomic context</div><h3 id="genomics-title">Variant &amp; pathogenicity inspector</h3><p class="neuro-small">Explore established gene and variant context. Markers are schematic, not patient-specific brain findings.</p></div>
+                <span class="variant-tag">Qualitative overlay only</span>
+            </div>
+            <div class="genomics-grid">
+                <div>
+                    <label for="variantSelect">Research profile</label>
+                    <select id="variantSelect">
+                        <option value="none">No variant selected</option>
+                        <option value="apoe-e3e3">APOE ε3/ε3</option>
+                        <option value="apoe-e3e4">APOE ε3/ε4</option>
+                        <option value="apoe-e4e4">APOE ε4/ε4</option>
+                        <option value="lrrk2-g2019s">LRRK2 p.Gly2019Ser</option>
+                        <option value="gba-n409s">GBA1 p.Asn409Ser (legacy N370S)</option>
+                        <option value="prnp-mm">PRNP codon 129: Met/Met</option>
+                        <option value="prnp-mv">PRNP codon 129: Met/Val</option>
+                        <option value="prnp-vv">PRNP codon 129: Val/Val</option>
+                    </select>
+                    <div><span class="variant-tag" id="variant-class">No overlay</span><span class="variant-tag" id="variant-regions">Template structures only</span></div>
+                </div>
+                <div>
+                    <p class="variant-description" id="variantDescription" aria-live="polite">Select a profile to see a concise, population-dependent research summary. Codon 129 is a common polymorphism, not a pathogenic PRNP mutation by itself.</p>
+                    <p class="simulator-warning">The overlay is a schematic location marker only. Genotype does not establish focal structural vulnerability, tissue damage, or an individual brain scan; the marker is not a biological risk map. Genetic effects vary by exact variant, ancestry, age, and family context; seek qualified genetic counseling for personal results.</p>
+                    <p class="evidence-links">
+                        Sources: <a href="https://www.nia.nih.gov/health/alzheimers-causes-and-risk-factors/what-do-we-know-about-genes-and-alzheimers-disease" target="_blank" rel="noopener noreferrer">NIA: Alzheimer's genes</a> ·
+                        <a href="https://www.ncbi.nlm.nih.gov/books/NBK1208/" target="_blank" rel="noopener noreferrer">GeneReviews: Parkinson disease overview</a> ·
+                        <a href="https://www.ncbi.nlm.nih.gov/books/NBK1223/" target="_blank" rel="noopener noreferrer">GeneReviews: Genetic prion disease</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+<!-- ============ 2. 3D brain ============ -->
+<h2 class="section">Interactive 3D brain</h2>
+<div class="brain-component-wrapper pulse-on" id="brain-viewer">
+    <div class="brain-viewer-panel">
+        <div class="brain-viewer-header">
+            <h2>3D Cortical Surface &amp; Internal Structures</h2>
+            <button type="button" id="component-pulse-toggle" aria-pressed="true">Pulse: on</button>
+        </div>
+        <p class="brain-note">
+            Generic template anatomy—not a patient scan. The graph does not alter this brain model, and genetic markers are schematic only.
+        </p>
+        <div class="brain-controls">
+            <label><input type="checkbox" id="translucent-toggle"> Show internal structures</label>
+            <span class="brain-views">
+                <button type="button" data-brain-view="lateral">Left</button>
+                <button type="button" data-brain-view="right">Right</button>
+                <button type="button" data-brain-view="top">Top</button>
+                <button type="button" data-brain-view="front">Front</button>
+                <button type="button" data-brain-view="oblique">Angled</button>
+            </span>
+        </div>
+        <div class="gl-container" style="height: 560px; width: 100%;" id="brain-3dplot"></div>
+    </div>
+</div>
+
+
+<!-- ============ 4. Trend history ============ -->
+<h2 class="section" id="assessment-history">Saved Trend History</h2>
+<div class="panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <p style="font-size:12px; color:#9ca3af;">Stored in this browser only. Click a row to reload its inputs.</p>
+        <div class="btn-row" style="margin-top:0;">
+            <input id="history-search" type="search" aria-label="Filter saved trend history" placeholder="Filter history…" style="min-width:190px;">
+            <button class="secondary" type="button" onclick="downloadHistoryCsv()">Export CSV</button>
+            <button class="secondary" onclick="clearHistory()">Clear history</button>
+        </div>
+    </div>
+    <table class="history">
+        <thead><tr><th>Saved</th><th>Disease</th><th>Measure</th><th>Observed change</th><th>Range</th></tr></thead>
+        <tbody id="historyBody"><tr><td colspan="5" style="color:#9ca3af;">No trends saved yet.</td></tr></tbody>
+    </table>
+</div>
+
+<div class="disclaimer">
+    <strong>Important:</strong> The graphs show entered scores and report values; they do not measure neuron loss or provide a validated personal forecast. Each measure uses its own scale, and other test results do not alter the clinical-score calculation. Treatment comparisons show group averages for context, not personal response estimates. The score direction is not a risk category, diagnosis, or disease stage. Do not use this page to choose treatment; discuss results with your clinician.
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="/static/brain_mesh.js"></script>
+<script>
+
+const diseaseNames = {
+    alzheimers: "Alzheimer's disease",
+    parkinsons: "Parkinson's disease",
+    huntingtons: "Huntington's disease"
+};
+const scaleInfo = {
+    alzheimers: {
+        name: 'Memory and daily activities score (CDR-SB)', maximum: 18,
+        description: 'Clinical Dementia Rating–Sum of Boxes (CDR-SB): a clinician-rated score of memory, thinking, and daily activities. Range: 0–18 points; higher usually means more difficulty.',
+        changeReference: {
+            review: 1,
+            large: 2,
+            note: 'A rise of 1 point has been considered meaningful in some early-stage contexts; 2 points is used in other stages. Because this app does not ask for disease stage, this is only a cautious prompt, not a personal clinical interpretation.',
+            source: 'https://pubmed.ncbi.nlm.nih.gov/38561021/'
+        }
+    },
+    parkinsons: {
+        name: 'Movement examination score (UPDRS Part III)', maximum: 108,
+        description: 'Unified Parkinson’s Disease Rating Scale, Part III (UPDRS Part III): a clinician’s rating of movement signs during an examination. Range: 0–108 points; higher means more signs recorded. Medication timing and exam conditions can affect the result.',
+        changeReference: {
+            review: 2.5,
+            large: 10.8,
+            note: 'Published clinically important change estimates for the original UPDRS Part III include 2.5 points for minimal change and 10.8 points for large change. These are reference values, not a personal risk scale; confirm that the report uses this original UPDRS version.',
+            source: 'https://pubmed.ncbi.nlm.nih.gov/20065131/'
+        }
+    },
+    huntingtons: {
+        name: 'Movement signs score (UHDRS Total Motor Score)', maximum: 124,
+        description: 'Unified Huntington’s Disease Rating Scale Total Motor Score (UHDRS): a trained clinician’s rating of movement signs. Range: 0–124 points; higher means more signs recorded. Rater and exam conditions matter.',
+        changeReference: null
+    }
+};
+const diseaseInformation = {
+    alzheimers: {
+        data: 'Your supplied PET file lists scan visits and amyloid/tau scan flags, while the MRI file lists scan metadata. They do not contain quantitative PET signal, CSF biomarker values, or linked repeated CDR-SB scores. Entered quantitative Centiloid values appear in the separate feature graph; the supplied files do not populate them.',
+        causes: 'Alzheimer’s disease involves progressive brain changes including amyloid-beta plaques and tau tangles. Age is a major risk factor; genetics, health, and other factors can also contribute. A risk factor or biomarker alone does not determine an individual outcome.',
+        treatments: 'Care may include symptom-management medicines, support for daily activities, and planning. Lecanemab and donanemab are FDA-approved options for some people with early symptomatic Alzheimer’s and confirmed amyloid pathology. Eligibility, risks (including amyloid-related imaging abnormalities), and monitoring require a specialist. This app does not recommend or determine treatment.',
+        result: 'A higher memory and daily activities score means more difficulty was recorded on that scale between the two measurements. The line extends that score change mathematically; it is not a disease stage or a prediction of brain tissue loss.',
+        datasetRate: 'The supplied Alzheimer’s files do not contain linked repeated clinical scores and quantitative biomarker values, so they cannot provide a dataset-derived progression rate.',
+        sources: [
+            { label: 'MedlinePlus: Alzheimer’s disease', url: 'https://medlineplus.gov/alzheimersdisease.html' },
+            { label: 'FDA: lecanemab approval and indication', url: 'https://www.fda.gov/news-events/press-announcements/fda-converts-novel-alzheimers-disease-treatment-traditional-approval' },
+            { label: 'Donanemab clinical results publication', url: 'https://doi.org/10.1001/jama.2023.13239' },
+            { label: 'ADNI data and samples', url: 'https://adni.loni.usc.edu/data-samples/' }
+        ]
+    },
+    parkinsons: {
+        data: 'Your supplied Parkinson’s telemonitoring file contains voice-analysis features (jitter, shimmer, HNR, RPDE, DFA, and PPE) and motor/total UPDRS scores over about six months. The UPDRS values are linearly interpolated. The clinical score graph and separate voice-feature graph use distinct scales; voice features are not standard clinical biomarkers or a validated individual forecast.',
+        causes: 'Parkinson’s involves loss or dysfunction of dopamine-producing nerve cells. Most cases do not have one known cause; age, genetic susceptibility, and environmental factors may contribute.',
+        treatments: 'Treatment can include symptom-relieving medicines such as levodopa, exercise and physical/occupational/speech therapy, and deep-brain stimulation for selected people. Options depend on symptoms and medical history and should be discussed with a clinician.',
+        result: 'A higher movement examination score means more movement signs were recorded between the two examinations. Medication timing and exam conditions matter. The line is a score extension, not a measure of neuron loss.',
+        datasetRate: 'Loading the supplied Parkinson’s dataset reference…',
+        sources: [
+            { label: 'MedlinePlus: Parkinson’s disease', url: 'https://medlineplus.gov/parkinsonsdisease.html' },
+            { label: 'UCI Parkinson’s Telemonitoring dataset', url: 'https://archive.ics.uci.edu/dataset/189/parkinsons+telemonitoring' },
+            { label: 'PPMI data access', url: 'https://www.ppmi-info.org/access-data-specimens/download-data' }
+        ]
+    },
+    huntingtons: {
+        data: 'Your supplied Huntington’s table contains HTT CAG repeat length and several clinical or biological fields, but has no visit dates or repeated measurements per ID and does not document report units/scales. It cannot establish a rate. The CAG repeat count is one-time genetic context and is not charted as a changing measure.',
+        causes: 'Huntington’s disease is caused by an expanded CAG repeat in the HTT gene and is inherited in an autosomal-dominant pattern. A personal genetic result should be discussed with a qualified genetic counselor.',
+        treatments: 'There is currently no cure or proven treatment that stops Huntington’s progression. Clinicians can treat some movement, mood, sleep, and other symptoms and coordinate rehabilitation, nutrition, communication, and supportive care.',
+        result: 'A higher movement signs score means more signs were recorded between the two assessments. The curve is a mathematical extension of that score change, not a disease stage or a prediction of neuronal loss.',
+        datasetRate: 'The supplied Huntington’s table has no visit dates or repeated measurements, so it cannot provide a dataset-derived progression rate.',
+        sources: [
+            { label: 'MedlinePlus: Huntington’s disease', url: 'https://medlineplus.gov/huntingtonsdisease.html' },
+            { label: 'Enroll-HD data access', url: 'https://www.enroll-hd.org/for-researchers/access-data-biosamples/' }
+        ]
+    }
+};
+const biomarkerSliders = {
+    alzheimers: [
+        { id: 'amyloid-centiloid', label: 'Amyloid PET scan level (Centiloids)', min: -50, max: 200, step: 0.1, digits: 1, unit: 'Centiloids (CL)', reportHint: 'Centiloids (CL) are a standardized way to report amyloid signal on some PET scans. Copy the CL value from a quantitative report; the supplied scan file does not include it.', definition: 'A numeric scale used by some amyloid PET reports to express scan signal relative to reference scans. It is not a symptom score or, by itself, a personal prognosis.' }
+    ],
+    parkinsons: [
+        { id: 'voice-jitter', label: 'Voice pitch steadiness (Jitter %)', min: 0.00083, max: 0.09999, step: 0.00001, digits: 5, unit: '%', reportHint: 'Jitter measures small pitch changes from one vocal cycle to the next. Look for “Jitter %” in specialized voice-analysis software; it is not a routine blood-test result.', definition: 'A measure of short-term variation in voice pitch, reported here as a percentage. The value depends on how the voice recording is made and analyzed.' },
+        { id: 'voice-shimmer', label: 'Voice loudness steadiness (Shimmer)', min: 0.00306, max: 0.26863, step: 0.00001, digits: 5, unit: 'report value', reportHint: 'Shimmer describes small changes in voice loudness. Copy the value exactly from voice-analysis software. Units and versions differ; do not convert.', definition: 'A measure of variation in voice loudness between vocal cycles. Different software may report different Shimmer versions and units.' },
+        { id: 'voice-hnr', label: 'Voice tone and noise (HNR)', min: 1.659, max: 37.875, step: 0.001, digits: 2, unit: 'dB', reportHint: 'HNR compares regular voiced sound with background-like noise. Look for “HNR” in the voice report; it is often shown in decibels (dB).', definition: 'Harmonics-to-noise ratio compares periodic voice energy with noise-like energy. Higher or lower values are not interpreted here as a personal diagnosis.' },
+        { id: 'voice-rpde', label: 'Voice pattern regularity (RPDE)', min: 0.15102, max: 0.96608, step: 0.00001, digits: 5, unit: 'unitless score', reportHint: 'RPDE is a specialized voice-pattern calculation. Copy the RPDE value from compatible voice-analysis software; it has no physical unit.', definition: 'Recurrence Period Density Entropy (RPDE) is a unitless calculation describing patterns in a voice signal. It is not a standard clinical test score.' },
+        { id: 'voice-dfa', label: 'Voice rhythm pattern (DFA)', min: 0.51404, max: 0.8656, step: 0.00001, digits: 5, unit: 'unitless score', reportHint: 'DFA is a specialized calculation of patterns across a voice recording. Copy the value from compatible software; it has no physical unit.', definition: 'Detrended Fluctuation Analysis (DFA) summarizes how patterns in a voice signal relate across time. It is a unitless signal feature, not a clinical scale.' },
+        { id: 'voice-ppe', label: 'Voice pitch variation (PPE)', min: 0.021983, max: 0.73173, step: 0.000001, digits: 6, unit: 'unitless score', reportHint: 'PPE is a specialized calculation of pitch-pattern variation. Copy the value from compatible voice-analysis software; it has no physical unit.', definition: 'Pitch Period Entropy (PPE) is a unitless calculation summarizing variability in voice pitch periods. It is not a standard clinical test score.' }
+    ],
+    huntingtons: [
+        { id: 'hd-chorea', label: 'Involuntary movement score (chorea)', min: 0, max: 10, step: 0.01, digits: 2, unit: 'report score', reportHint: 'Chorea means involuntary, irregular movements. Copy the named chorea score and scale from the assessment. The supplied table does not establish that scale.', definition: 'A clinician-rated movement subscore may describe chorea, but different assessments use different ranges. The provided data do not identify a validated report scale for this field.' },
+        { id: 'hd-brain-volume', label: 'MRI brain-region volume', min: 2, max: 8.5, step: 0.01, digits: 2, unit: 'report value', reportHint: 'MRI volume is the measured size of a named brain region. Compare only the same region, method, and unit; the supplied table does not identify them.', definition: 'A value describing the size of a brain region on MRI. Region, acquisition, processing method, and units must match; the source field does not provide enough detail to interpret it.' },
+        { id: 'hd-function', label: 'Daily function score (named scale)', min: 0, max: 100, step: 1, digits: 0, unit: 'report score', reportHint: 'Copy the function score and scale name from the report. Different scales are not interchangeable; the supplied table does not identify this scale.', definition: 'A score intended to summarize daily function. Its meaning and direction depend on the named assessment; the source field does not identify which scale was used.' },
+        { id: 'hd-aggregation', label: 'Protein test result (named assay)', min: 0.1, max: 5, step: 0.01, digits: 2, unit: 'report value', reportHint: 'Only compare results from the same named protein test with the same printed unit. The supplied table does not specify the assay or unit.', definition: 'A result from a laboratory assay measuring a protein-related feature. Assay methods and units vary; the source field is not sufficiently documented for clinical interpretation.' }
+    ]
+};
+const treatmentOptions = {
+    alzheimers: [
+        { id: 'none', label: 'No added intervention scenario', note: 'The graph follows the score trend without applying an intervention effect.' },
+        { id: 'lecanemab', label: 'Lecanemab · group-average comparison', effectPoints: 0.45, effectWindow: 1.5, contextAgeRange: [50, 90], note: 'In a published comparison over 18 months, the average CDR-SB score rose 1.21 points with lecanemab and 1.66 points with placebo. The graph shows that 0.45-point group-average difference for context only; it cannot predict your response.' },
+        { id: 'donanemab', label: 'Donanemab · group-average comparison', effectPoints: 0.70, effectWindow: 76 / 52, contextAgeRange: [60, 85], note: 'A published comparison over 76 weeks reported an average CDR-SB increase of 1.72 points with donanemab and 2.42 points with placebo. The graph shows that 0.70-point group-average difference for context only; it cannot predict your response.' },
+        { id: 'donepezil', label: 'Donepezil · symptom-management context', note: 'May help some symptoms for a time. No numerical change is applied to the score graph.' },
+        { id: 'support', label: 'Memory and daily-activity support', note: 'May support well-being and daily function. No numerical change is applied to the score graph.' }
+    ],
+    parkinsons: [
+        { id: 'none', label: 'No added intervention scenario', note: 'The graph follows the score trend without applying an intervention effect.' },
+        { id: 'sparx-exercise', label: 'Treadmill exercise · group-average comparison', effectPoints: 2.9, effectWindow: 0.5, contextAgeRange: [40, 80], note: 'A six-month published comparison reported an average UPDRS Part III change of +0.3 points with high-intensity treadmill exercise and +3.2 points with usual care. The graph shows this 2.9-point group difference for context only; it does not establish neuron preservation or an individual effect.' },
+        { id: 'levodopa', label: 'Levodopa-based symptom treatment', note: 'Levodopa can improve motor symptoms, but medication response is not the same as a change in disease progression. No numerical change is applied to this graph.' },
+        { id: 'physical-therapy', label: 'Physical, occupational, or speech therapy', note: 'Therapy can support movement, balance, communication, and daily function. No numerical change is applied to this graph.' },
+        { id: 'deep-brain-stimulation', label: 'Deep-brain stimulation (selected people)', note: 'DBS may improve selected motor symptoms but is not represented as slowing neurodegeneration. No numerical change is applied to this graph.' }
+    ],
+    huntingtons: [
+        { id: 'none', label: 'No added intervention scenario', note: 'No numeric effect on score change is established here.' },
+        { id: 'tetrabenazine', label: 'Tetrabenazine · chorea symptom-management context', note: 'Can reduce chorea in some people. Chorea-specific outcomes are not equivalent to the UHDRS Total Motor Score; no numerical effect is applied to this graph.' },
+        { id: 'deutetrabenazine', label: 'Deutetrabenazine · movement-symptom context', note: 'One published comparison measured the UHDRS Total Maximal Chorea score, not the Total Motor Score shown here. No numerical change is applied to this graph.' },
+        { id: 'rehabilitation', label: 'Rehabilitation and supportive care', note: 'May support movement, communication, mood, nutrition, and daily needs. No numerical change is applied to this graph.' }
+    ]
+};
+const HISTORY_KEY = 'neuroquant.progression.history.v1';
+let progressionChart = null;
+let featureChart = null;
+let lastTrend = null;
+let currentResult = null;
+let calculationSequence = 0;
+let parkinsonsBenchmarkPromise = null;
+const scoreInputsTouched = { earlier: false, later: false };
+let biomarkerInputsTouched = {};
+let ageInputTouched = false;
+
+function selectedDisease() {
+    return document.querySelector('[data-disease-option][aria-pressed="true"]')?.dataset.diseaseOption || 'parkinsons';
+}
+
+function selectDisease(disease) {
+    document.querySelectorAll('[data-disease-option]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.diseaseOption === disease));
+    });
+    scoreInputsTouched.earlier = false;
+    scoreInputsTouched.later = false;
+    biomarkerInputsTouched = { earlier: false, later: false };
+    updateTreatmentOptions();
+    updateDiseaseInformation();
+    clearTrendOutput();
+    document.getElementById('simulator-validation').textContent = 'Enter the named score from both reports. Other report results are optional.';
+}
+
+function updateDiseaseInformation() {
+    const disease = selectedDisease();
+    const info = diseaseInformation[disease];
+    document.getElementById('disease-data-description').textContent = info.data;
+    document.getElementById('disease-causes').textContent = info.causes;
+    document.getElementById('disease-treatments').textContent = info.treatments;
+    document.getElementById('disease-result-help').textContent = info.result;
+    const benchmark = document.getElementById('dataset-rate-description');
+    benchmark.textContent = info.datasetRate;
+    if (disease === 'parkinsons') loadParkinsonsBenchmark(benchmark);
+    const sources = document.getElementById('disease-sources');
+    sources.replaceChildren(document.createTextNode('Public references: '));
+    info.sources.forEach((source, index) => {
+        if (index) sources.append(document.createTextNode(' · '));
+        const link = document.createElement('a');
+        link.href = source.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = source.label;
+        sources.append(link);
+    });
+
+    const geneticContext = document.getElementById('genetic-context-slider');
+    geneticContext.replaceChildren();
+    if (disease === 'huntingtons') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'genetic-context-slider';
+        const label = document.createElement('label');
+        label.htmlFor = 'htt-cag-context';
+        const measure = document.createElement('strong');
+        measure.textContent = 'HTT CAG repeat count';
+        label.append(measure, document.createTextNode(' (context only) '));
+        const output = document.createElement('output');
+        output.id = 'htt-cag-context-value';
+        output.textContent = 'Not entered';
+        label.append(output);
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.id = 'htt-cag-context';
+        input.min = '35';
+        input.max = '80';
+        input.step = '1';
+        input.value = '35';
+        input.setAttribute('aria-label', 'HTT CAG repeat count; context only');
+        input.addEventListener('input', () => {
+            output.textContent = `${input.value} repeats`;
+        });
+        wrapper.append(label, input);
+        geneticContext.append(wrapper);
+    }
+    document.getElementById('biomarker-intro').textContent = disease === 'alzheimers'
+        ? 'Copy quantitative amyloid PET scan levels in Centiloids (CL) from two reports. The supplied PET file has scan flags, not Centiloid results.'
+        : disease === 'parkinsons'
+            ? 'These are specialized voice-analysis features, not routine lab tests. Use values from the same voice-analysis system and copy each feature’s value and unit exactly as printed.'
+            : 'The supplied table does not document these fields’ units or scale provenance. Only compare two reports when they use the same named test, scale, method, and unit; otherwise leave the pair blank.';
+    renderBiomarkerControls();
+    renderMeasureDefinitions();
+    document.getElementById('biomarker-note').textContent = disease === 'parkinsons'
+        ? 'Use the numeric report-value boxes to enter the exact reading, including values outside the dataset-range sliders. The sliders are only a convenience and their ranges still define the exploratory index scale. Voice features are not routine clinical lab results.'
+        : disease === 'huntingtons'
+            ? 'The supplied table has no visit dates and does not establish the report scale or units for these fields. HTT CAG repeat count is one-time genetic context and is not included in either graph. Use the numeric report-value boxes for exact readings; the sliders are only a convenience.'
+            : 'Use the numeric report-value boxes for exact Centiloid readings. Slider limits are for visual adjustment only, not diagnostic cutoffs. The supplied Alzheimer’s PET file does not contain quantitative Centiloid values.';
+}
+
+function renderMeasureDefinitions() {
+    const disease = selectedDisease();
+    const definitions = [
+        [scaleInfo[disease].name, scaleInfo[disease].description],
+        ['Annualized score change (% of scale range per year)', '(Most recent score − earlier score) ÷ (maximum score − minimum score) × 100 ÷ years between reports. A positive value means the score rose; a negative value means it fell. This app-defined normalization is not a standard biological formula and is not a percentage of neuron loss.'],
+        ['Score change per year', 'The difference between the two score reports divided by the number of years between them. It describes only those two entries; it is not a future rate.'],
+        ['Score direction', '“Score rose” means the later score is higher, “Score fell” means it is lower, and “No clear change” means the difference is within this app’s display tolerance of 0.01 points per year. This tolerance is not a medical cutoff.'],
+        ['Illustrative score line', 'A straight-line extension of the entered score change. It does not account for future changes, and it is not a personal forecast.'],
+        ['Feature change line', 'Each feature line shows its change from the earlier value as a percentage of the feature’s slider range. Different features have different underlying units, so the lines use this normalized display.'],
+        ['Combined relative-change index', 'The mean of the absolute annual change percentages for the non-clinical features entered. Each percentage is calculated using the feature slider range. It excludes the clinical score and does not say whether a change is helpful or harmful.'],
+        ['Score-change band', 'For CDR-SB and original UPDRS Part III, the orange/red prompts compare the absolute increase between reports with published clinical-change references. The green prompt means only “below the selected reference”; it does not mean the condition is stable. These are not risk levels or neuron-loss estimates and may not apply to every person. No threshold is assigned here for the Huntington’s movement score.'],
+        ['Age and report interval', 'Age is saved as context only and is not used in the calculations. The report interval is the time between the two dates; use the interval for the values you entered.'],
+        ['Treatment comparison', 'Where available, the line shows an average score difference reported for a group receiving a treatment. It is included for context only and cannot estimate an individual result or recommend treatment.'],
+        ['Points and percentages', 'Points belong to the named clinical score. Percentages in the feature summary are calculated from the app’s entry ranges; they are not laboratory units or a personal risk percentage.']
+    ];
+    biomarkerSliders[disease].forEach(measure => {
+        definitions.push([measure.label, measure.definition || measure.reportHint]);
+    });
+    if (disease === 'huntingtons') {
+        definitions.push(['HTT CAG repeat count', 'The number of repeated CAG DNA letters in the HTT gene. This is a genetic result, not a value that changes between routine reports, and it is not included in the graphs or index.']);
+    }
+    const list = document.getElementById('measure-definitions');
+    list.replaceChildren();
+    definitions.forEach(([term, definition]) => {
+        const title = document.createElement('dt');
+        title.textContent = term;
+        const description = document.createElement('dd');
+        description.textContent = definition;
+        list.append(title, description);
+    });
+    const references = [
+        ['Percentage-change method overview', 'https://cran.r-project.org/web/packages/clinicalsignificance/vignettes/percentage-change-approach.html'],
+        ['CDR-SB change review', 'https://pubmed.ncbi.nlm.nih.gov/38561021/'],
+        ['Original UPDRS Part III change estimates', 'https://pubmed.ncbi.nlm.nih.gov/20065131/']
+    ];
+    const referenceLinks = document.getElementById('method-reference-links');
+    referenceLinks.replaceChildren();
+    references.forEach(([label, url], index) => {
+        if (index) referenceLinks.append(document.createTextNode(' · '));
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = label;
+        referenceLinks.append(link);
+    });
+}
+
+async function loadParkinsonsBenchmark(target) {
+    if (!parkinsonsBenchmarkPromise) {
+        parkinsonsBenchmarkPromise = fetch('/api/progression-data')
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'The dataset summary could not be loaded.');
+                return data;
+            });
+    }
+    try {
+        const summary = await parkinsonsBenchmarkPromise;
+        if (selectedDisease() !== 'parkinsons') return;
+        const rate = Number(summary.median_endpoint_rate);
+        target.textContent = `Supplied-data reference: the median change in movement examination score was ${rate > 0 ? '+' : ''}${rate.toFixed(2)} points per year across ${summary.participants} people, with a median record span of ${summary.study_span_months} months. Scores were mathematically estimated between recorded dates; this short-term group summary is not a personal prediction or neuron-loss rate.`;
+    } catch (error) {
+        if (selectedDisease() !== 'parkinsons') return;
+        target.textContent = `Could not load the supplied Parkinson’s dataset summary: ${error.message}`;
+    }
+}
+
+function renderBiomarkerControls() {
+    const disease = selectedDisease();
+    const fields = document.getElementById('biomarker-slider-fields');
+    fields.replaceChildren();
+    biomarkerInputsTouched = {};
+    biomarkerSliders[disease].forEach(measure => {
+        biomarkerInputsTouched[measure.id] = { earlier: false, later: false };
+        const inputCard = document.createElement('section');
+        inputCard.className = 'biomarker-slider';
+        const heading = document.createElement('h4');
+        heading.textContent = measure.label;
+        const hint = document.createElement('p');
+        hint.className = 'neuro-small biomarker-report-hint';
+        hint.textContent = measure.reportHint;
+        inputCard.append(heading, hint);
+        ['earlier', 'later'].forEach((timepoint, index) => {
+            const group = document.createElement('div');
+            group.className = 'biomarker-input-control';
+            const inputId = `biomarker-${measure.id}-${timepoint}`;
+            const label = document.createElement('label');
+            const entryId = `${inputId}-entry`;
+            label.htmlFor = entryId;
+            label.append(document.createTextNode(`${index === 0 ? 'Earlier report' : 'Most recent report'} · `));
+            const measureName = document.createElement('strong');
+            measureName.textContent = measure.label;
+            label.append(measureName, document.createTextNode(` · enter ${measure.unit}`));
+            const output = document.createElement('output');
+            output.id = `${inputId}-value`;
+            output.textContent = 'Not entered';
+            label.append(output);
+            const entry = document.createElement('input');
+            entry.type = 'number';
+            entry.id = entryId;
+            entry.step = String(measure.step);
+            entry.inputMode = 'decimal';
+            entry.setAttribute('aria-label', `${measure.label}, ${index === 0 ? 'earlier' : 'most recent'} report value in ${measure.unit}`);
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.id = inputId;
+            slider.min = String(measure.min);
+            slider.max = String(measure.max);
+            slider.step = String(measure.step);
+            slider.value = String(measure.min);
+            slider.setAttribute('aria-label', `${measure.label}, ${index === 0 ? 'earlier' : 'most recent'} report slider`);
+            slider.addEventListener('input', () => {
+                biomarkerInputsTouched[measure.id][timepoint] = true;
+                entry.value = slider.value;
+                output.textContent = `${Number(slider.value).toFixed(measure.digits)} ${measure.unit}`;
+                calculateTrend();
+            });
+            entry.addEventListener('input', () => {
+                const value = entry.value === '' ? null : Number(entry.value);
+                biomarkerInputsTouched[measure.id][timepoint] = value !== null && Number.isFinite(value);
+                if (value === null) {
+                    output.textContent = 'Not entered';
+                } else if (Number.isFinite(value)) {
+                    if (value >= measure.min && value <= measure.max) slider.value = String(value);
+                    output.textContent = `${value.toFixed(measure.digits)} ${measure.unit}`;
+                }
+                calculateTrend();
+            });
+            group.append(label, entry, slider);
+            inputCard.append(group);
+        });
+        fields.append(inputCard);
+    });
+}
+
+function sharedTimelineMinimum(biomarkerGap = Number(document.getElementById('biomarker-years').value)) {
+    const scoreGap = scoreInputsTouched.earlier && scoreInputsTouched.later
+        ? Number(document.getElementById('observation-years').value) : 0;
+    return -Math.max(1, Math.ceil(Math.max(scoreGap, biomarkerGap)));
+}
+
+function collectBiomarkerReportValues() {
+    const gap = Number(document.getElementById('biomarker-years').value);
+    return biomarkerSliders[selectedDisease()].map(measure => {
+        const touched = biomarkerInputsTouched[measure.id] || { earlier: false, later: false };
+        return {
+            id: measure.id,
+            earlier: touched.earlier ? Number(document.getElementById(`biomarker-${measure.id}-earlier-entry`).value) : null,
+            later: touched.later ? Number(document.getElementById(`biomarker-${measure.id}-later-entry`).value) : null,
+            intervalYears: gap
+        };
+    });
+}
+
+function restoreBiomarkerReportValues(values, interval) {
+    if (Number.isFinite(Number(interval)) && Number(interval) > 0) {
+        document.getElementById('biomarker-years').value = String(interval);
+        document.getElementById('biomarker-years-value').textContent = `${Number(interval).toFixed(1)} years`;
+    }
+    if (!Array.isArray(values)) return;
+    const measures = new Map(biomarkerSliders[selectedDisease()].map(measure => [measure.id, measure]));
+    values.forEach(saved => {
+        const measure = measures.get(saved.id);
+        const touched = biomarkerInputsTouched[saved.id];
+        if (!measure || !touched) return;
+        ['earlier', 'later'].forEach(timepoint => {
+            const value = saved[timepoint];
+            if (value === null || value === undefined) return;
+            const input = document.getElementById(`biomarker-${measure.id}-${timepoint}`);
+            const entry = document.getElementById(`${input.id}-entry`);
+            input.value = String(value);
+            entry.value = String(value);
+            touched[timepoint] = true;
+            document.getElementById(`${input.id}-value`).textContent = `${Number(value).toFixed(measure.digits)} ${measure.unit}`;
+        });
+    });
+}
+
+function initializeProgressionChart() {
+    progressionChart = new Chart(document.getElementById('simulatorChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            datasets: [
+                        { label: 'Entered score change', data: [], borderColor: '#83c4d4', backgroundColor: '#83c4d4', borderWidth: 2, pointRadius: 5, showLine: true, tension: 0, yAxisID: 'y' },
+                        { label: 'Straight-line score-change illustration', data: [], borderColor: '#95e3c1', backgroundColor: 'rgba(149,227,193,.1)', borderDash: [7, 5], borderWidth: 3, pointRadius: 0, fill: false, tension: 0 },
+                        { label: 'Treatment group-average comparison', data: [], borderColor: '#d8a6ef', backgroundColor: 'rgba(216,166,239,.08)', borderDash: [3, 4], borderWidth: 3, pointRadius: 0, fill: false, tension: 0, yAxisID: 'y' }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            parsing: false,
+            interaction: { mode: 'nearest', intersect: false },
+            scales: {
+                x: {
+                    type: 'linear', min: -1, max: 5,
+                    title: { display: true, text: 'Years from most recent score report', color: '#97a9ad' },
+                    grid: { color: 'rgba(151,169,173,.12)' }, ticks: { color: '#97a9ad', stepSize: 1 }
+                },
+                y: {
+                    min: -10, max: 10,
+                    title: { display: true, text: 'Score change (% of full score range)', color: '#97a9ad' },
+                    grid: { color: 'rgba(151,169,173,.15)' }, ticks: { color: '#97a9ad' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#c7d5d0' } },
+                tooltip: {
+                    callbacks: {
+                        title: items => items.length ? `Year ${items[0].parsed.x}` : '',
+                        label: item => `${item.dataset.label}: ${item.parsed.y.toFixed(2)}% of scale${Number.isFinite(item.raw.score) ? ` (${item.raw.score.toFixed(1)} points)` : ''}`
+                    }
+                }
+            }
+        },
+        plugins: [{
+            id: 'emptyTrendPrompt',
+            afterDraw(chart) {
+                if (chart.data.datasets.some(dataset => dataset.data.length)) return;
+                const { ctx, chartArea } = chart;
+                if (!chartArea) return;
+                ctx.save();
+                ctx.fillStyle = '#97a9ad';
+                ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Enter the same named score from two reports to draw the line.', (chartArea.left + chartArea.right) / 2, (chartArea.top + chartArea.bottom) / 2);
+                ctx.restore();
+            }
+        }]
+    });
+    featureChart = new Chart(document.getElementById('biomarkerChart').getContext('2d'), {
+        type: 'line',
+        data: { datasets: [] },
+        options: {
+            responsive: true, maintainAspectRatio: false, parsing: false,
+            interaction: { mode: 'nearest', intersect: false },
+            scales: {
+                x: {
+                    type: 'linear', min: -1, max: 5,
+                    title: { display: true, text: 'Years from most recent report', color: '#97a9ad' },
+                    grid: { color: 'rgba(151,169,173,.12)' }, ticks: { color: '#97a9ad', stepSize: 1 }
+                },
+                y: {
+                    title: { display: true, text: 'Change from earlier value (% of app entry range)', color: '#97a9ad' },
+                    grid: { color: 'rgba(151,169,173,.15)' }, ticks: { color: '#97a9ad' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#c7d5d0' } },
+                tooltip: { callbacks: { title: items => items.length ? `Year ${items[0].parsed.x}` : '' } }
+            }
+        },
+        plugins: [{
+            id: 'emptyFeaturePrompt',
+            afterDraw(chart) {
+                if (chart.data.datasets.some(dataset => dataset.data.length)) return;
+                const { ctx, chartArea } = chart;
+                if (!chartArea) return;
+                ctx.save();
+                ctx.fillStyle = '#97a9ad';
+                ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Enter earlier and recent values for a feature to draw this graph.', (chartArea.left + chartArea.right) / 2, (chartArea.top + chartArea.bottom) / 2);
+                ctx.restore();
+            }
+        }]
+    });
+}
+
+function updateTreatmentOptions() {
+    clearTrendOutput();
+    const disease = selectedDisease();
+    const options = treatmentOptions[disease];
+    const select = document.getElementById('whatif-treatment');
+    select.replaceChildren(...options.map(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.label;
+        return option;
+    }));
+    select.value = 'none';
+    document.getElementById('scale-note').textContent = scaleInfo[disease].description;
+    document.getElementById('observed-start').max = scaleInfo[disease].maximum;
+    document.getElementById('observed-latest').max = scaleInfo[disease].maximum;
+    document.getElementById('score-input-name-earlier').textContent = scaleInfo[disease].name;
+    document.getElementById('score-input-name-latest').textContent = scaleInfo[disease].name;
+    document.getElementById('clinical-chart-title').textContent = `Rate of change in your ${scaleInfo[disease].name}`;
+    document.getElementById('clinical-chart-description').textContent =
+        `This graph shows how ${scaleInfo[disease].name} changes from the latest report, as a percentage of its full score range. ${scaleInfo[disease].description} This is not percent neuron loss.`;
+    document.getElementById('simulatorChart').setAttribute('aria-label', `${scaleInfo[disease].name} change as a percentage of the full score range`);
+    ['observed-start', 'observed-latest', 'observation-years'].forEach(id => {
+        const input = document.getElementById(id);
+        input.min = id === 'observation-years' ? '0.1' : '0';
+        input.disabled = false;
+    });
+    setRangeValue('observed-start', 0);
+    setRangeValue('observed-latest', 0);
+    setRangeValue('observation-years', 1);
+    document.getElementById('observed-start-value').textContent = 'Not entered';
+    document.getElementById('observed-latest-value').textContent = 'Not entered';
+    document.getElementById('observation-years').max = '10';
+    document.getElementById('observation-years').step = '0.1';
+    document.getElementById('treatment-reference').hidden = true;
+    updateTreatmentNote();
+    if (progressionChart) {
+        progressionChart.options.scales.y.min = -10;
+        progressionChart.options.scales.y.max = 10;
+        progressionChart.options.scales.y.title.text = 'Score change (% of full range from latest result)';
+        progressionChart.data.datasets[2].label = 'Treatment group-average comparison';
+        progressionChart.update('none');
+    }
+}
+
+function setRangeValue(id, value) {
+    const input = document.getElementById(id);
+    input.value = String(value);
+    document.getElementById(`${id}-value`).textContent =
+        id === 'observation-years' ? `${Number(value).toFixed(3)} years` : `${Number(value).toFixed(1)} points`;
+}
+
+function updateTreatmentNote() {
+    const disease = selectedDisease();
+    const selected = treatmentOptions[disease].find(item => item.id === document.getElementById('whatif-treatment').value);
+    const note = document.getElementById('treatment-evidence');
+    note.textContent = selected?.note || '';
+    const reference = document.getElementById('treatment-reference');
+    const benchmarkSelected = Number.isFinite(selected?.effectPoints);
+    const showEvidence = benchmarkSelected;
+    reference.hidden = !showEvidence;
+    if (showEvidence) {
+        const source = selected.id === 'lecanemab'
+            ? '<a href="https://doi.org/10.1056/NEJMoa2212948" target="_blank" rel="noopener noreferrer">Published clinical results</a>'
+            : selected.id === 'donanemab'
+                ? '<a href="https://doi.org/10.1001/jama.2023.13239" target="_blank" rel="noopener noreferrer">Published clinical results</a>'
+                : '<a href="https://doi.org/10.1001/jamaneurol.2017.3517" target="_blank" rel="noopener noreferrer">Published exercise results</a>';
+        const age = ageInputTouched ? Number(document.getElementById('patient-age').value) : null;
+        const ageContext = age === null
+            ? 'Age not entered; the comparison’s age range is not personalized.'
+            : age >= selected.contextAgeRange[0] && age <= selected.contextAgeRange[1]
+                ? `Entered age ${age} is within the age range represented in this comparison (${selected.contextAgeRange[0]}–${selected.contextAgeRange[1]} years); this does not establish eligibility or expected benefit.`
+                : `Entered age ${age} is outside the age range represented in this comparison (${selected.contextAgeRange[0]}–${selected.contextAgeRange[1]} years); the average may not apply.`;
+        reference.innerHTML = `<strong>Evidence source:</strong> ${source}. ${ageContext} The graph shows a group-average difference on the same score for context only. It is not adjusted to predict an individual response. Any extension beyond the reported follow-up is illustrative, not evidence that the effect persists.`;
+    } else if (selected?.id !== 'none') {
+        reference.hidden = false;
+        reference.textContent = `${selected.note} The intervention line therefore overlaps the unchanged-score trend; patient score or biomarker inputs cannot supply a reliable missing treatment-effect estimate.`;
+    }
+    const scenario = progressionChart?.data.datasets[2];
+    if (scenario) {
+        scenario.label = benchmarkSelected
+            ? `${selected.label} · group average`
+            : selected?.id === 'none'
+                ? 'No added intervention scenario'
+                : `${selected.label} · no matching score effect`;
+        progressionChart.update('none');
+    }
+}
+
+function clearTrendOutput() {
+    currentResult = null;
+    lastTrend = null;
+    if (progressionChart) {
+        progressionChart.data.datasets.forEach(dataset => { dataset.data = []; });
+        progressionChart.update('none');
+    }
+    if (featureChart) {
+        featureChart.data.datasets = [];
+        featureChart.update('none');
+    }
+    document.getElementById('observed-slope').textContent = '—';
+    document.getElementById('score-range-rate').textContent = '—';
+    document.getElementById('projected-score').textContent = '—';
+    document.getElementById('scenario-score').textContent = '—';
+    document.getElementById('trend-status').textContent = '—';
+    document.getElementById('risk-category').textContent = 'Not assessed';
+    document.getElementById('change-review').dataset.level = 'neutral';
+    document.getElementById('change-review-title').textContent = 'No score change assessed yet';
+    document.getElementById('change-review-detail').textContent = 'Enter two scores from the same assessment scale. This prompt cannot measure neuron loss or determine personal risk.';
+    document.getElementById('slope-caption').textContent = 'Score change in points per year';
+    document.getElementById('projection-caption').textContent = 'At selected horizon';
+    document.getElementById('scenario-caption').textContent = 'Group-average treatment comparison only when available';
+    document.getElementById('combined-index-rate').textContent = '—';
+    document.getElementById('combined-index-caption').textContent = 'Paired non-clinical features only';
+    document.getElementById('combined-index-summary').textContent = 'Enter earlier and recent values for at least one feature to see this graph and its exploratory index.';
+    document.getElementById('clinical-index-summary').textContent = 'Enter both score values to see the graph.';
+    document.getElementById('score-range-rate').textContent = '—';
+    document.getElementById('plain-language-result').textContent = 'Enter your report values to see the clinical score trend.';
+    document.getElementById('save-trend').disabled = true;
+    document.getElementById('download-trend').disabled = true;
+}
+
+function updateScoreChangeReview(disease, earlier, later) {
+    const change = later - earlier;
+    const absoluteChange = Math.abs(change);
+    const interval = Number(document.getElementById('observation-years').value);
+    const annualizedChange = change / interval;
+    const box = document.getElementById('change-review');
+    const title = document.getElementById('change-review-title');
+    const detail = document.getElementById('change-review-detail');
+    const level = document.getElementById('risk-category');
+    box.dataset.level = 'neutral';
+
+    if (disease === 'huntingtons') {
+        title.textContent = 'No validated change threshold available for this score';
+        detail.textContent = `The entered movement score changed by ${change > 0 ? '+' : ''}${change.toFixed(1)} points (${annualizedChange > 0 ? '+' : ''}${annualizedChange.toFixed(2)} points per year). This app does not classify this change as stable, moderate, high, or neurodegeneration risk. Please review score changes with the treating clinician.`;
+        level.textContent = 'Not classified';
+        return;
+    }
+
+    const reference = scaleInfo[disease].changeReference;
+    if (change <= 0.01) {
+        title.textContent = change < -0.01 ? 'Score decreased between reports' : 'No clear score increase between reports';
+        detail.textContent = `Entered change: ${change > 0 ? '+' : ''}${change.toFixed(1)} points (${annualizedChange > 0 ? '+' : ''}${annualizedChange.toFixed(2)} points per year). This is not evidence that the condition is stable and does not assess neuron loss.`;
+        level.textContent = change < -0.01 ? 'Score decreased' : 'No clear increase';
+        return;
+    }
+
+    if (absoluteChange >= reference.large) {
+        box.dataset.level = 'large';
+        title.textContent = 'Increase reaches a higher clinical-change reference — contact your clinician';
+        level.textContent = 'Higher change band';
+    } else if (absoluteChange >= reference.review) {
+        box.dataset.level = 'review';
+        title.textContent = 'Score increase may be clinically meaningful — discuss with your clinician';
+        level.textContent = 'Moderate change band';
+    } else {
+        box.dataset.level = 'lower';
+        title.textContent = 'Below the selected score-change reference';
+        level.textContent = 'Lower change band';
+    }
+
+    const referenceLink = `<a href="${reference.source}" target="_blank" rel="noopener noreferrer">clinical reference</a>`;
+    detail.innerHTML = `Entered change: +${change.toFixed(1)} points over ${interval.toFixed(1)} years (${annualizedChange.toFixed(2)} points per year). The reference applies to the score difference, not an annualized-rate cutoff. ${reference.note} See the ${referenceLink}. This is not a diagnosis, emergency assessment, or personal neurodegeneration-risk estimate.`;
+}
+
+function buildCombinedIndex(payload) {
+    const biomarkerRows = collectBiomarkerReportValues().filter(item => item.earlier !== null && item.later !== null);
+    const components = biomarkerRows.flatMap(row => {
+        const measure = biomarkerSliders[selectedDisease()].find(item => item.id === row.id);
+        if (!measure) return [];
+        return [{
+            id: measure.id,
+            label: measure.label,
+            earlier: row.earlier,
+            latest: row.later,
+            interval: Number(payload.biomarker_interval_years),
+            span: measure.max - measure.min
+        }];
+    });
+    if (!components.length) return { annualRate: null, points: [], series: [], componentLabels: [] };
+    const annualRate = components.reduce((sum, item) =>
+        sum + Math.abs((item.latest - item.earlier) / item.interval) / item.span, 0
+    ) / components.length * 100;
+    const interval = components[0].interval;
+    const colors = ['#83c4d4', '#95e3c1', '#d8a6ef', '#f0bf81', '#ee8d98', '#91a9f2'];
+    const series = components.map((item, index) => ({
+        label: item.label,
+        data: [
+            { x: -interval, y: 0 },
+            { x: 0, y: ((item.latest - item.earlier) / item.span) * 100 }
+        ],
+        borderColor: colors[index % colors.length],
+        backgroundColor: colors[index % colors.length],
+        borderWidth: 2,
+        pointRadius: 4,
+        showLine: true,
+        tension: 0
+    }));
+    const points = [{ x: -interval, y: 0 }, { x: 0, y: annualRate * interval }];
+    series.push({
+        label: 'Combined relative-change index (exploratory)',
+        data: points,
+        borderColor: '#f0bf81',
+        backgroundColor: '#f0bf81',
+        borderWidth: 3,
+        pointRadius: 5,
+        showLine: true,
+        tension: 0
+    });
+    return { annualRate, points, series, componentLabels: components.map(item => item.label) };
+}
+
+function updateFeatureTrendChart(combinedIndex) {
+    const interval = Number(document.getElementById('biomarker-years').value);
+    const years = Math.max(1, Math.ceil(interval));
+    featureChart.options.scales.x.min = -years;
+    featureChart.options.scales.x.max = 0;
+    featureChart.data.datasets = combinedIndex.series;
+    featureChart.update('none');
+    document.getElementById('combined-index-rate').textContent =
+        combinedIndex.annualRate === null ? '—' : `${combinedIndex.annualRate.toFixed(2)}%`;
+    document.getElementById('combined-index-caption').textContent =
+        combinedIndex.annualRate === null ? 'No paired report results entered' : 'Average size of change per year (% of app entry range)';
+    document.getElementById('combined-index-summary').textContent = combinedIndex.componentLabels.length
+        ? `Included features: ${combinedIndex.componentLabels.join(', ')}. The gold line averages each feature’s absolute change divided by its slider range; colored lines retain whether that feature rose or fell. Both show only the two entered reports, not a future forecast.`
+        : 'No feature is included yet. Enter both earlier and recent values for at least one feature to draw its line and calculate the exploratory index.';
+}
+
+async function calculateTrend() {
+    const requestId = ++calculationSequence;
+    if (!scoreInputsTouched.earlier || !scoreInputsTouched.later) {
+        clearTrendOutput();
+        updateFeatureTrendChart(buildCombinedIndex({
+            biomarker_interval_years: document.getElementById('biomarker-years').value
+        }));
+        document.getElementById('simulator-validation').textContent = 'Enter the named score from both reports. Other report results can be graphed separately.';
+        return false;
+    }
+    if (document.getElementById('observed-start').disabled) {
+        clearTrendOutput();
+        updateFeatureTrendChart(buildCombinedIndex({
+            biomarker_interval_years: document.getElementById('biomarker-years').value
+        }));
+        return false;
+    }
+    clearTrendOutput();
+    const disease = selectedDisease();
+    const treatment = treatmentOptions[disease].find(item => item.id === document.getElementById('whatif-treatment').value);
+    const payload = {
+        disease,
+        earlier_score: document.getElementById('observed-start').value,
+        later_score: document.getElementById('observed-latest').value,
+        years_between: document.getElementById('observation-years').value,
+        biomarker_interval_years: document.getElementById('biomarker-years').value,
+        horizon_years: document.getElementById('projection-years').value,
+        effect_points: treatment?.effectPoints || 0,
+        effect_fraction: treatment?.effectPoints ? 1 : 0,
+        scenario_mode: treatment?.effectPoints ? 'study_difference' : 'none',
+        effect_window_years: treatment?.effectWindow || 1
+    };
+    const status = document.getElementById('simulator-validation');
+    let result;
+    try {
+        const response = await fetch('/progression', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        result = await response.json();
+        if (requestId !== calculationSequence) return false;
+        if (!response.ok) {
+            status.textContent = result.error || 'Could not calculate this trend.';
+            return false;
+        }
+    } catch (error) {
+        if (requestId !== calculationSequence) return false;
+        status.textContent = 'Could not reach the app server. Check the connection and try again.';
+        return false;
+    }
+
+    currentResult = result;
+    const values = result.chart_data;
+    const gap = Number(payload.years_between);
+    const horizon = Number(payload.horizon_years);
+    progressionChart.options.scales.x.min = sharedTimelineMinimum();
+    progressionChart.options.scales.x.max = horizon;
+    const latestScore = Number(payload.later_score);
+    const fullScoreRange = result.score_maximum;
+    const toRangeChange = score => ((score - latestScore) / fullScoreRange) * 100;
+    const observedPoints = values.observed_years.map((year, index) => ({
+        x: year,
+        y: toRangeChange(values.observed_scores[index]),
+        score: values.observed_scores[index]
+    }));
+    const projectedPoints = values.projection_years.map((year, index) => ({
+        x: year,
+        y: toRangeChange(values.projected_scores[index]),
+        score: values.projected_scores[index]
+    }));
+    const scenarioPoints = values.projection_years.map((year, index) => ({
+        x: year,
+        y: toRangeChange(values.scenario_scores[index]),
+        score: values.scenario_scores[index]
+    }));
+    const allGraphValues = [...observedPoints, ...projectedPoints, ...scenarioPoints].map(point => point.y);
+    const graphMinimum = Math.min(0, ...allGraphValues);
+    const graphMaximum = Math.max(0, ...allGraphValues);
+    const graphPadding = Math.max(1, (graphMaximum - graphMinimum) * 0.1);
+    progressionChart.options.scales.y.min = graphMinimum - graphPadding;
+    progressionChart.options.scales.y.max = graphMaximum + graphPadding;
+    progressionChart.options.scales.y.title.text = `${scaleInfo[disease].name}: change from latest (% of full range)`;
+    progressionChart.data.datasets[0].data = observedPoints;
+    progressionChart.data.datasets[1].data = projectedPoints;
+    progressionChart.data.datasets[2].data = scenarioPoints;
+    progressionChart.update('none');
+    const combinedIndex = buildCombinedIndex(payload);
+    updateFeatureTrendChart(combinedIndex);
+    document.getElementById('observed-start-value').textContent = `${Number(payload.earlier_score).toFixed(1)} points`;
+    document.getElementById('observed-latest-value').textContent = `${Number(payload.later_score).toFixed(1)} points`;
+    document.getElementById('observation-years-value').textContent = `${gap.toFixed(2)} years`;
+
+    const rate = result.annualized_change;
+    updateScoreChangeReview(disease, Number(payload.earlier_score), Number(payload.later_score));
+    const percentScalePerYear = (rate / result.score_maximum) * 100;
+    const direction = rate > 0.01 ? 'Score rose' : rate < -0.01 ? 'Score fell' : 'Score unchanged';
+    document.getElementById('observed-slope').textContent = `${rate > 0 ? '+' : ''}${rate.toFixed(2)} points/year`;
+    document.getElementById('score-range-rate').textContent = `${percentScalePerYear > 0 ? '+' : ''}${percentScalePerYear.toFixed(2)}% / year`;
+    document.getElementById('trend-status').textContent = direction === 'Score unchanged' ? 'No clear change' : direction;
+    document.getElementById('trend-status-caption').textContent = 'Direction between these reports only; not a risk level';
+    document.getElementById('slope-caption').textContent = `${scaleInfo[disease].name}; points per year`;
+    document.getElementById('projected-score').textContent = `${values.projected_scores.at(-1).toFixed(1)} / ${result.score_maximum} points`;
+    document.getElementById('projection-caption').textContent = `At year ${horizon}; linear score extension`;
+    document.getElementById('scenario-score').textContent = `${values.scenario_scores.at(-1).toFixed(1)} / ${result.score_maximum} points`;
+    document.getElementById('clinical-index-summary').textContent = `This line shows change from the most recent ${scaleInfo[disease].name} result as a percentage of its full 0–${result.score_maximum}-point range. The rate is ${percentScalePerYear > 0 ? '+' : ''}${percentScalePerYear.toFixed(2)}% of the scale per year. It is not a percentage of neuron loss.`;
+    const difference = values.projected_scores.at(-1) - values.scenario_scores.at(-1);
+    const scenarioIsActive = Boolean(treatment?.effectPoints && payload.effect_fraction > 0);
+    const sameVisibleScores = values.projected_scores.every((score, index) => score === values.scenario_scores[index]);
+    const scaleBoundaryHidesScenario = scenarioIsActive && sameVisibleScores
+        && [...values.projected_scores, ...values.scenario_scores].some(score => score === 0 || score === result.score_maximum);
+    document.getElementById('scenario-caption').textContent = scaleBoundaryHidesScenario
+        ? 'Score-scale limit masks the difference'
+        : treatment?.effectPoints
+        ? `At year ${horizon}; group-average treatment comparison`
+        : treatment?.id !== 'none'
+                ? 'No matching score effect; lines overlap'
+                : 'No added intervention scenario';
+    const scoreDirection = rate > 0.01 ? 'rose' : rate < -0.01 ? 'fell' : 'did not change';
+    document.getElementById('plain-language-result').textContent = treatment?.effectPoints && payload.effect_fraction > 0
+        ? `Your entered ${scaleInfo[disease].name} changed by ${Math.abs(rate).toFixed(2)} points per year (${scoreDirection}) over the selected interval. At year ${horizon}, the graph shows a group-average treatment difference of ${difference.toFixed(1)} points for context. This is not an estimate of your personal treatment response.${scaleBoundaryHidesScenario ? ' The score-scale boundary hides the difference; the linear extension is not informative beyond that point.' : ''}`
+        : treatment?.id !== 'none'
+            ? `The entered scores changed by ${Math.abs(rate).toFixed(2)} points per year (${scoreDirection}). No matching published treatment effect is available for this exact score, so the lines overlap. Patient score and biomarker values alone cannot calculate a reliable individual treatment benefit.`
+            : `The entered ${scaleInfo[disease].name} changed by ${Math.abs(rate).toFixed(2)} points per year (${scoreDirection}). The separate feature graph shows any paired report values; its exploratory summary is not a clinical score or a forecast of neuron loss.`;
+    status.textContent = scaleBoundaryHidesScenario
+        ? 'Both score lines reach the scale boundary, which hides the group-average treatment difference.'
+        : treatment?.effectPoints
+            ? 'Updated. The treatment line shows a group average for context, not a personal treatment estimate.'
+            : 'Updated from the entered report values. No matching published treatment effect is applied.';
+    lastTrend = {
+        id: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        savedAt: new Date().toISOString(),
+        disease: result.disease,
+        measure: scaleInfo[disease].name,
+        earlier: Number(payload.earlier_score),
+        later: Number(payload.later_score),
+        interval: gap,
+        annualizedChange: rate,
+        annualizedScoreRangePercent: percentScalePerYear,
+        scoreChangeFormula: '(most recent score - earlier score) / full score range * 100 / years between reports',
+        horizon,
+        horizonScore: values.projected_scores.at(-1),
+        scenarioScore: values.scenario_scores.at(-1),
+        treatment: treatment?.id || 'none',
+        treatmentFraction: payload.effect_fraction,
+        biomarkers: collectBiomarkerReportValues(),
+        biomarkerInterval: Number(document.getElementById('biomarker-years').value),
+        combinedIndexAnnualRate: combinedIndex.annualRate,
+        combinedIndexValues: combinedIndex.points,
+        combinedIndexMeasures: combinedIndex.componentLabels,
+        ageYears: ageInputTouched ? Number(document.getElementById('patient-age').value) : null,
+        maximum: result.score_maximum
+    };
+    document.getElementById('download-trend').disabled = false;
+    document.getElementById('save-trend').disabled = false;
+    renderHistory();
+    return true;
+}
+
+function downloadTrendReport() {
+    if (!lastTrend || !currentResult) return;
+    const report = {
+        ...lastTrend,
+        projection: currentResult.chart_data,
+        method: currentResult.method,
+        treatment: document.getElementById('whatif-treatment').value,
+        biological_context: {
+            measures: lastTrend.biomarkers,
+            htt_cag_repeat_count: document.getElementById('htt-cag-context')?.value || null,
+            interval_years: lastTrend.biomarkerInterval,
+            age_years: lastTrend.ageYears,
+            used_in_progression_projection: false
+        },
+        disclaimer: 'The annualized score percentage is an app-defined normalization: (latest score - earlier score) / full score range * 100 / elapsed years. It is not a percentage of neurodegeneration or neuron loss, a validated prognosis, or an individual risk estimate. The separate feature summary is also exploratory and based on app entry ranges. Treatment comparisons show group averages only when available, not personal effects or recommendations.'
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `neuroquant-trend-${lastTrend.disease}-${lastTrend.savedAt.slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+}
+
+function loadHistory() {
+    try {
+        const stored = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        return Array.isArray(stored) ? stored.filter(entry => entry && scaleInfo[entry.disease]) : [];
+    } catch (error) {
+        document.getElementById('simulator-validation').textContent = 'Could not read saved trends from this browser.';
+        return [];
+    }
+}
+
+function saveTrend() {
+    if (!lastTrend) return;
+    const history = loadHistory();
+    history.unshift(lastTrend);
+    try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+        renderHistory();
+        document.getElementById('simulator-validation').textContent = 'Trend saved locally in this browser.';
+    } catch (error) {
+        document.getElementById('simulator-validation').textContent = 'Could not save this trend in browser storage.';
+    }
+}
+
+function renderHistory() {
+    const body = document.getElementById('historyBody');
+    const query = document.getElementById('history-search').value.trim().toLocaleLowerCase();
+    const history = loadHistory();
+    const filtered = history.filter(entry =>
+        `${diseaseNames[entry.disease]} ${entry.measure} ${entry.savedAt}`.toLocaleLowerCase().includes(query)
+    );
+    body.replaceChildren();
+    if (!filtered.length) {
+        const row = body.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 5;
+        cell.textContent = history.length ? 'No matching trends.' : 'No saved trends yet.';
+        return;
+    }
+    filtered.forEach(entry => {
+        const row = body.insertRow();
+        [new Date(entry.savedAt).toLocaleString(), diseaseNames[entry.disease], entry.measure,
+            `${entry.annualizedChange > 0 ? '+' : ''}${Number(entry.annualizedChange).toFixed(2)} / year`,
+            `${entry.horizon} years`].forEach(value => {
+            row.insertCell().textContent = value;
+        });
+        row.tabIndex = 0;
+        row.setAttribute('role', 'button');
+        row.setAttribute('aria-label', `Load ${diseaseNames[entry.disease]} trend saved ${new Date(entry.savedAt).toLocaleString()}`);
+        const load = () => {
+            document.querySelector(`[data-disease-option="${entry.disease}"]`)?.click();
+            updateTreatmentOptions();
+            scoreInputsTouched.earlier = true;
+            scoreInputsTouched.later = true;
+            setRangeValue('observed-start', entry.earlier);
+            setRangeValue('observed-latest', entry.later);
+            setRangeValue('observation-years', entry.interval);
+            document.getElementById('projection-years').value = String(entry.horizon);
+            restoreBiomarkerReportValues(entry.biomarkers, entry.biomarkerInterval);
+            if (entry.treatment && treatmentOptions[entry.disease].some(item => item.id === entry.treatment)) {
+                document.getElementById('whatif-treatment').value = entry.treatment;
+                updateTreatmentNote();
+            }
+            calculateTrend();
+            document.getElementById('progression-outlook').scrollIntoView({ behavior: 'smooth' });
+        };
+        row.addEventListener('click', load);
+        row.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                load();
+            }
+        });
+    });
+}
+
+function clearHistory() {
+    try {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistory();
+    } catch (error) {
+        document.getElementById('simulator-validation').textContent = 'Could not clear saved trends from browser storage.';
+    }
+}
+
+function downloadHistoryCsv() {
+    const history = loadHistory();
+    if (!history.length) {
+        document.getElementById('simulator-validation').textContent = 'There are no saved trends to export.';
+        return;
+    }
+    const columns = ['saved_at', 'disease', 'measure', 'earlier_score', 'later_score', 'interval_years', 'annualized_change_points_per_year', 'annualized_score_range_percent_per_year', 'projection_horizon_years', 'horizon_score'];
+    const escape = value => `"${String(value ?? '').replaceAll('"', '""')}"`;
+    const rows = history.map(entry => [
+        entry.savedAt, diseaseNames[entry.disease], entry.measure, entry.earlier,
+        entry.later,         entry.interval, entry.annualizedChange, entry.annualizedScoreRangePercent, entry.horizon, entry.horizonScore
+    ].map(escape).join(','));
+    const url = URL.createObjectURL(new Blob([[columns.map(escape).join(','), ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `neuroquant-trends-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+}
+
+const variantProfiles = {
+    none: {
+        label: 'No overlay', regions: [], tint: '#95e3c1',
+        summary: 'Select a profile to see a concise, population-dependent research summary. Codon 129 is a common polymorphism, not a pathogenic PRNP mutation by itself.',
+        tags: 'Template structures only'
+    },
+    'apoe-e3e3': {
+        label: 'Common genotype', regions: [], tint: '#8dd9c2',
+        summary: 'APOE ε3/ε3 is the common reference genotype in many populations. It does not rule out Alzheimer disease or determine an individual outcome.',
+        tags: 'No risk-allele overlay'
+    },
+    'apoe-e3e4': {
+        label: 'Risk-associated allele', regions: ['hippocampus', 'cortex'], tint: '#9cdbc0',
+        summary: 'One APOE ε4 allele is associated with increased late-onset Alzheimer disease risk, but is neither necessary nor sufficient for disease. Risk estimates vary across ancestry and other factors.',
+        tags: 'Hippocampus · cortex'
+    },
+    'apoe-e4e4': {
+        label: 'Two risk-associated alleles', regions: ['hippocampus', 'cortex'], tint: '#afd9b6',
+        summary: 'APOE ε4/ε4 is associated with higher Alzheimer disease risk than one ε4 copy, but remains a risk genotype rather than a deterministic diagnosis. Population-specific counseling is important.',
+        tags: 'Hippocampus · cortex'
+    },
+    'lrrk2-g2019s': {
+        label: 'Pathogenic variant', regions: ['caudate', 'putamen', 'pallidum'], tint: '#8ec6e1',
+        summary: 'LRRK2 p.Gly2019Ser is a pathogenic variant associated with autosomal-dominant Parkinson disease; penetrance is incomplete and varies with age and ancestry.',
+        tags: 'Caudate · putamen · pallidum'
+    },
+    'gba-n409s': {
+        label: 'Parkinson risk variant', regions: ['caudate', 'putamen', 'pallidum'], tint: '#89c9df',
+        summary: 'GBA1 p.Asn409Ser (legacy N370S) is a pathogenic Gaucher-disease variant and is also associated with increased Parkinson disease risk in carriers. A single copy does not mean Parkinson disease will occur.',
+        tags: 'Caudate · putamen · pallidum'
+    },
+    'prnp-mm': {
+        label: 'Common polymorphism', regions: ['cortex', 'brainstem'], tint: '#c8a9e8',
+        summary: 'PRNP codon 129 Met/Met is a common polymorphism that can modify susceptibility or phenotype in prion disease contexts; it is not a pathogenic mutation on its own.',
+        tags: 'Cortex · brainstem (schematic)'
+    },
+    'prnp-mv': {
+        label: 'Common polymorphism', regions: ['cortex', 'brainstem'], tint: '#c8a9e8',
+        summary: 'PRNP codon 129 Met/Val is a common polymorphism associated with prion disease susceptibility and phenotype differences. Its meaning depends on disease context and other factors.',
+        tags: 'Cortex · brainstem (schematic)'
+    },
+    'prnp-vv': {
+        label: 'Common polymorphism', regions: ['cortex', 'brainstem'], tint: '#c8a9e8',
+        summary: 'PRNP codon 129 Val/Val is a common polymorphism associated with prion disease susceptibility and phenotype differences. It is not a pathogenic mutation by itself.',
+        tags: 'Cortex · brainstem (schematic)'
+    }
+};
+
+function updateVariantOverlay() {
+    const profile = variantProfiles[document.getElementById('variantSelect').value];
+    document.getElementById('variant-class').textContent = profile.label;
+    document.getElementById('variant-regions').textContent = profile.tags;
+    document.getElementById('variantDescription').textContent = profile.summary;
+    brainState.geneticOverlay = profile.regions.length ? profile : null;
+    if (document.getElementById('brain-3dplot') && window.Plotly) renderBrain();
+}
+
+/* ======================= 3D brain ======================= */
+        // Template surface data and display-only deformation; not patient imaging or a biological progression model.
+        const Brain = (() => {
+            const M = window.BRAIN_MESH;
+            const dec = (b64, Type) => {
+                const bin = atob(b64), u8 = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+                return new Type(u8.buffer);
+            };
+            const prep = (p) => {
+                const q = { name: p.name, n: p.n, v: dec(p.v, Int16Array), nrm: dec(p.nrm, Int8Array) };
+                const f = dec(p.f, Uint16Array), cnt = f.length / 3;
+                q.i = new Array(cnt); q.j = new Array(cnt); q.k = new Array(cnt);
+                for (let t = 0; t < cnt; t++) { q.i[t] = f[t * 3]; q.j[t] = f[t * 3 + 1]; q.k[t] = f[t * 3 + 2]; }
+                if (p.sulc) q.sulc = dec(p.sulc, Int8Array);
+                if (p.fc) { const idx = dec(p.fc, Uint8Array); q.facecolor = Array.from(idx, k => M.palette[k]); }
+                let cx = 0, cy = 0, cz = 0;
+                for (let a = 0; a < q.n; a++) { cx += q.v[a * 3]; cy += q.v[a * 3 + 1]; cz += q.v[a * 3 + 2]; }
+                q.c = [cx / q.n / 10, cy / q.n / 10, cz / q.n / 10];
+                return q;
+            };
+            const cortex = M.cortex.map(prep), sub = M.sub.map(prep);
+
+            const wet = { ambient: 0.24, diffuse: 0.8, specular: 0.74, roughness: 0.22, fresnel: 0.28 };
+            const matte = { ambient: 0.48, diffuse: 0.75, specular: 0.1, roughness: 0.85 };
+            const light = { x: 120, y: 140, z: 160 };
+            function mixHex(base, tint, amount) {
+                const channels = [1, 3, 5].map(index => {
+                    const start = parseInt(base.slice(index, index + 2), 16);
+                    const end = parseInt(tint.slice(index, index + 2), 16);
+                    return Math.round(start + (end - start) * amount).toString(16).padStart(2, '0');
+                });
+                return `#${channels.join('')}`;
+            }
+
+            function cortexTrace(h, A, overlay) {
+                const n = h.n, x = new Array(n), y = new Array(n), z = new Array(n), c = new Array(n);
+                const shrink = 1 - 0.05 * A;
+                for (let a = 0; a < n; a++) {
+                    const d = h.sulc[a] / 127;                       // +1 deep sulcus, -1 gyral crown
+                    const crown = Math.max(-d, 0);
+                    const disp = -A * (0.8 + 4.5 * crown) / 127;     // inward mm per unit normal (nrm is scaled by 127)
+                    x[a] = (h.v[a * 3] / 10 + h.nrm[a * 3] * disp) * shrink;
+                    y[a] = (h.v[a * 3 + 1] / 10 + h.nrm[a * 3 + 1] * disp) * shrink;
+                    z[a] = (h.v[a * 3 + 2] / 10 + h.nrm[a * 3 + 2] * disp) * shrink;
+                    // dark in the folds, light on crowns; atrophy exposes more dark sulcal tissue
+                    c[a] = Math.min(1, Math.max(0, 0.5 - 0.5 * d * (1 + 0.5 * A)));
+                }
+                const facecolor = overlay?.regions.includes('cortex')
+                    ? h.facecolor.map(color => mixHex(color, overlay.tint, 0.28))
+                    : h.facecolor;
+                return { type: 'mesh3d', x, y, z, i: h.i, j: h.j, k: h.k, facecolor, flatshading: false,
+                         showscale: false, lighting: wet, lightposition: light, hoverinfo: 'skip', name: h.name, showlegend: false };
+            }
+
+            const subStyle = {
+                'Hippocampus': { color: '#e8a34a', shrink: 0.4 }, 'Amygdala': { color: '#d9824a', shrink: 0.3 },
+                'Thalamus': { color: '#c9a7a0' }, 'Caudate': { color: '#b98b88' }, 'Putamen': { color: '#c79b8f' },
+                'Pallidum': { color: '#a97a7a' }, 'Brainstem': { color: '#d88c84' }, 'Cerebellum': { color: '#d88c84' }
+            };
+            function subTrace(p, A, overlay) {
+                const key = Object.keys(subStyle).find(k => p.name.endsWith(k)), st = subStyle[key] || { color: '#c9a7a0' };
+                const highlighted = overlay?.regions.some(region => p.name.toLowerCase().includes(region));
+                const s = 1 - (st.shrink || 0) * A, n = p.n, x = new Array(n), y = new Array(n), z = new Array(n);
+                for (let a = 0; a < n; a++) {
+                    x[a] = p.c[0] + (p.v[a * 3] / 10 - p.c[0]) * s;
+                    y[a] = p.c[1] + (p.v[a * 3 + 1] / 10 - p.c[1]) * s;
+                    z[a] = p.c[2] + (p.v[a * 3 + 2] / 10 - p.c[2]) * s;
+                }
+                const color = highlighted ? mixHex(st.color, overlay.tint, 0.42) : st.color;
+                return { type: 'mesh3d', x, y, z, i: p.i, j: p.j, k: p.k, color, lighting: matte, lightposition: light,
+                         hoverinfo: 'text', text: p.name, name: p.name, showlegend: false };
+            }
+
+            // Lateral ventricles: tubes along an approximate MNI path, widening with atrophy
+            function ventricle(side, A) {
+                const ctrl = [[8, 26, 12], [10, 12, 18], [13, -8, 24], [20, -30, 20], [26, -44, 10], [34, -38, -4], [38, -22, -14], [38, -8, -18]];
+                const pts = [];
+                for (let s = 0; s < ctrl.length - 1; s++) for (let t = 0; t < 16; t++) pts.push(ctrl[s].map((v, k) => v + (ctrl[s + 1][k] - v) * t / 16));
+                pts.push(ctrl[ctrl.length - 1]);
+                const sides = 24, X = [], Y = [], Z = [], I = [], J = [], K = [], m = pts.length, grow = 1 + 1.6 * A;
+                for (let a = 0; a < m; a++) {
+                    const p = pts[a], q0 = pts[Math.max(0, a - 1)], q1 = pts[Math.min(m - 1, a + 1)];
+                    let t = [q1[0] - q0[0], q1[1] - q0[1], q1[2] - q0[2]]; const tl = Math.hypot(...t); t = t.map(v => v / tl);
+                    const ref = Math.abs(t[0]) > 0.9 ? [0, 1, 0] : [1, 0, 0];
+                    let nr = [t[1] * ref[2] - t[2] * ref[1], t[2] * ref[0] - t[0] * ref[2], t[0] * ref[1] - t[1] * ref[0]];
+                    const nl = Math.hypot(...nr); nr = nr.map(v => v / nl);
+                    const bn = [t[1] * nr[2] - t[2] * nr[1], t[2] * nr[0] - t[0] * nr[2], t[0] * nr[1] - t[1] * nr[0]];
+                    const r = (1.2 + 1.6 * Math.sin(Math.PI * Math.min(1, a / (m - 1) * 1.05))) * grow;
+                    for (let k = 0; k < sides; k++) {
+                        const ang = k * 2 * Math.PI / sides, cx = r * Math.cos(ang), cy = r * 1.3 * Math.sin(ang);
+                        X.push(side * (p[0] + nr[0] * cx + bn[0] * cy)); Y.push(p[1] + nr[1] * cx + bn[1] * cy); Z.push(p[2] + nr[2] * cx + bn[2] * cy);
+                    }
+                }
+                for (let a = 0; a < m - 1; a++) for (let k = 0; k < sides; k++) {
+                    const p0 = a * sides + k, p1 = a * sides + (k + 1) % sides, p2 = (a + 1) * sides + k, p3 = (a + 1) * sides + (k + 1) % sides;
+                    I.push(p0, p1); J.push(p2, p3); K.push(p1, p2);
+                }
+                return { type: 'mesh3d', x: X, y: Y, z: Z, i: I, j: J, k: K, color: '#5fa8d3', lighting: wet, lightposition: light,
+                         hoverinfo: 'text', text: 'Lateral ventricle', showlegend: false };
+            }
+
+            function traces(A, translucent, overlay) {
+                const t = cortex.map(h => ({ ...cortexTrace(h, A, overlay), opacity: overlay ? 0.2 : translucent ? 0.16 : 1 }));
+                // Normal view shows only brainstem and cerebellum outside the cortex; deep structures appear in the translucent view
+                sub.forEach(p => {
+                    if (translucent || /Brainstem|Cerebellum/.test(p.name) || overlay?.regions.some(region => p.name.toLowerCase().includes(region))) t.push(subTrace(p, A, overlay));
+                });
+                if (translucent) { t.push(ventricle(1, A)); t.push(ventricle(-1, A)); }
+                if (overlay) {
+                    const positions = [];
+                    sub.forEach(p => {
+                        const region = overlay.regions.find(item => p.name.toLowerCase().includes(item));
+                        if (region) positions.push({ point: p.c, label: region[0].toUpperCase() + region.slice(1) });
+                    });
+                    if (overlay.regions.includes('cortex')) {
+                        cortex.forEach(h => {
+                            let index = 0;
+                            for (let vertex = 1; vertex < h.n; vertex++) {
+                                if (Math.abs(h.v[vertex * 3]) > Math.abs(h.v[index * 3])) index = vertex;
+                            }
+                            positions.push({
+                                point: [h.v[index * 3] / 10, h.v[index * 3 + 1] / 10, h.v[index * 3 + 2] / 10],
+                                label: 'Cortical context'
+                            });
+                        });
+                    }
+                    if (positions.length) {
+                        t.push({
+                            type: 'scatter3d',
+                            mode: 'markers+text',
+                            x: positions.map(item => item.point[0]),
+                            y: positions.map(item => item.point[1]),
+                            z: positions.map(item => item.point[2]),
+                            text: positions.map(item => item.label),
+                            textposition: 'top center',
+                            textfont: { color: '#fff', size: 11 },
+                            marker: { size: 8, color: overlay.tint, opacity: 1, line: { color: '#fff', width: 2 } },
+                            hovertemplate: '%{text}<br>Schematic location only<extra></extra>',
+                            name: 'Schematic variant context',
+                            showlegend: false
+                        });
+                    }
+                }
+                return t;
+            }
+            return { traces };
+        })();
+
+        const brainLayout = {
+            paper_bgcolor: '#101a21',
+            plot_bgcolor: '#101a21',
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            showlegend: false,
+            scene: {
+                aspectmode: 'data',
+                xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false },
+                bgcolor: '#101a21',
+                camera: { eye: { x: -1.9, y: 0, z: 0.42 }, up: { x: 0, y: 0, z: 1 } }
+            }
+        };
+        const brainViews = {
+            lateral: { x: -1.9, y: 0.0, z: 0.42 },
+            right: { x: 1.9, y: 0.0, z: 0.42 },
+            top: { x: 0.0, y: 0.01, z: 2.0 },
+            front: { x: 0.0, y: 1.9, z: 0.25 },
+            oblique: { x: -1.4, y: 1.2, z: 0.7 }
+        };
+        let brainState = { atrophy: 0, translucent: false, geneticOverlay: null };
+
+        function renderBrain() {
+            Plotly.react('brain-3dplot', Brain.traces(brainState.atrophy, brainState.translucent, brainState.geneticOverlay), brainLayout, {
+                responsive: true, displaylogo: false,
+                modeBarButtonsToRemove: ['sendDataToCloud', 'hoverClosest3d', 'resetCameraLastSave3d']
+            });
+        }
+        // Manual display control only; it is independent of progression calculations.
+        document.addEventListener("DOMContentLoaded", function () {
+            const wrapper = document.querySelector('.brain-component-wrapper');
+            const pulseBtn = document.getElementById("component-pulse-toggle");
+            if (pulseBtn && wrapper) {
+                pulseBtn.addEventListener("click", () => {
+                    const active = wrapper.classList.toggle("pulse-on");
+                    pulseBtn.setAttribute("aria-pressed", active);
+                    pulseBtn.textContent = `Pulse: ${active ? "on" : "off"}`;
+                });
+            }
+            if (!document.getElementById('brain-3dplot')) return;
+            renderBrain();
+
+            document.getElementById('translucent-toggle').addEventListener('change', e => {
+                brainState.translucent = e.target.checked;
+                renderBrain();
+            });
+            document.querySelectorAll('[data-brain-view]').forEach(btn => btn.addEventListener('click', () => {
+                Plotly.relayout('brain-3dplot', { 'scene.camera.eye': brainViews[btn.dataset.brainView] });
+            }));
+        });
+
+window.addEventListener('load', () => {
+    initializeProgressionChart();
+    document.getElementById('calculate-trend').addEventListener('click', calculateTrend);
+    document.getElementById('save-trend').addEventListener('click', saveTrend);
+    document.getElementById('download-trend').addEventListener('click', downloadTrendReport);
+    document.querySelectorAll('[data-disease-option]').forEach(button => {
+        button.addEventListener('click', () => selectDisease(button.dataset.diseaseOption));
+    });
+    ['observed-start', 'observed-latest', 'observation-years'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            const input = document.getElementById(id);
+            if (id === 'observed-start') scoreInputsTouched.earlier = true;
+            if (id === 'observed-latest') scoreInputsTouched.later = true;
+            document.getElementById(`${id}-value`).textContent =
+                id === 'observation-years' ? `${Number(input.value).toFixed(3)} years` : `${Number(input.value).toFixed(1)} points`;
+            calculateTrend();
+        });
+    });
+    document.getElementById('history-search').addEventListener('input', renderHistory);
+    document.getElementById('whatif-treatment').addEventListener('change', () => {
+        updateTreatmentNote();
+        calculateTrend();
+    });
+    document.getElementById('projection-years').addEventListener('change', () => {
+        calculateTrend();
+    });
+    document.getElementById('patient-age').addEventListener('input', () => {
+        ageInputTouched = true;
+        document.getElementById('patient-age-value').textContent = `${document.getElementById('patient-age').value} years`;
+        updateTreatmentNote();
+    });
+    document.getElementById('biomarker-years').addEventListener('input', () => {
+        const gap = document.getElementById('biomarker-years').value;
+        document.getElementById('biomarker-years-value').textContent = `${Number(gap).toFixed(1)} years`;
+        calculateTrend();
+    });
+    document.getElementById('variantSelect').addEventListener('change', updateVariantOverlay);
+    document.getElementById('variantSelect').value = 'none';
+    updateVariantOverlay();
+    updateTreatmentOptions();
+    updateDiseaseInformation();
+    renderHistory();
+    clearTrendOutput();
+    document.getElementById('simulator-validation').textContent = 'Enter the named score from both reports. Other report results can be graphed separately.';
+});
+</script>
+    </main>
+</div>
+<script src="{{ url_for('static', filename='neural-network.js') }}"></script>
+</body>
+</html>
