@@ -44,11 +44,11 @@
         button.secondary.on { background: #1e3a5f; border-color: #60a5fa; }
         .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 
-        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
         @media (max-width: 700px) { .metrics-grid { grid-template-columns: 1fr; } }
-        .metric-card { background-color: #1f2937; padding: 16px; border-radius: 8px; border: 1px solid #374151; }
+        .metric-card { min-width: 0; overflow-wrap: anywhere; background-color: #1f2937; padding: 16px; border-radius: 8px; border: 1px solid #374151; }
         .metric-title { font-size: 12px; color: #9ca3af; font-weight: bold; text-transform: uppercase; }
-        .metric-value { font-size: 28px; font-weight: bold; margin-top: 6px; color: #38bdf8; }
+        .metric-value { overflow-wrap: anywhere; font-size: 28px; font-weight: bold; margin-top: 6px; color: #38bdf8; }
         .metric-sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
         .risk-explanation { margin: 0 0 18px; padding: 12px 14px; border: 1px solid rgba(131,196,212,.3); border-left: 4px solid #83c4d4; border-radius: 9px; color: #c7d5d0; background: rgba(76,143,155,.08); font-size: 13px; line-height: 1.55; }
         .change-review { margin: 0 0 10px; padding: 14px 16px; border: 1px solid #52616a; border-left: 5px solid #82949c; border-radius: 10px; color: #e3f1ec; background: rgba(110,130,140,.1); }
@@ -69,7 +69,7 @@
         @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
         .chart-box { height: 240px; position: relative; }
 
-        .info-card { background-color: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 16px; margin-top: 16px; font-size: 13px; line-height: 1.5; }
+        .info-card { min-width: 0; overflow-wrap: anywhere; background-color: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 16px; margin-top: 16px; font-size: 13px; line-height: 1.5; }
         .info-card h4 { color: #60a5fa; margin-bottom: 8px; font-size: 15px; }
         .info-card ul { padding-left: 18px; margin-top: 6px; }
         .json-box { background-color: #030712; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #a7f3d0; border: 1px solid #1f2937; margin-top: 10px; white-space: pre-wrap; }
@@ -146,11 +146,11 @@
         .brain-views button { padding: 4px 10px; margin-right: 4px; font-size: 12px; color: #f8e9df; background: #49333a; border: 1px solid #96636b; border-radius: 6px; cursor: pointer; }
         .brain-views button:hover { background: #5c3f4a; }
         .region-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 18px 0; }
-        .region-picker button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; font-size: 12px; color: #d8e5e0; background: #142129; border: 1px solid #263840; border-radius: 999px; cursor: pointer; }
+        .region-picker button { display: inline-flex; min-width: 0; max-width: 100%; align-items: center; gap: 6px; padding: 5px 11px; font-size: 12px; line-height: 1.35; text-align: left; white-space: normal; overflow-wrap: anywhere; color: #d8e5e0; background: #142129; border: 1px solid #263840; border-radius: 999px; cursor: pointer; }
         .region-picker button:hover { border-color: #548c73; }
         .region-picker button[aria-pressed="true"] { color: #1d1a0d; background: #ffe08a; border-color: #ffe08a; }
-        .region-picker i { width: 8px; height: 8px; border-radius: 50%; }
-        .region-info { margin: 12px 18px 18px; padding: 14px 16px; border: 1px solid rgba(207,255,235,.14); border-radius: 12px; background: rgba(9,19,25,.45); color: #d8e5e0; font-size: 13px; line-height: 1.65; }
+        .region-picker i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; }
+        .region-info { min-width: 0; overflow-wrap: anywhere; margin: 12px 18px 18px; padding: 14px 16px; border: 1px solid rgba(207,255,235,.14); border-radius: 12px; background: rgba(9,19,25,.45); color: #d8e5e0; font-size: 13px; line-height: 1.65; }
         .region-info h3 { margin: 0 0 4px; font-size: 15px; color: #95e3c1; }
         .region-info h4 { margin: 10px 0 2px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #97a9ad; }
         .region-info p { margin: 0; }

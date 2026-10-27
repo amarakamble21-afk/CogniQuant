@@ -60,6 +60,8 @@
         .card:hover { transform: translateY(-5px); border-color: rgba(149,227,193,.42); box-shadow: 0 24px 56px rgba(0,0,0,.25), 0 0 32px rgba(77,211,156,.08), inset 0 1px rgba(255,255,255,.13); }
         .card:hover::after { left: 115%; }
         .feature-card { display: block; color: inherit; text-decoration: none; }
+        .planned-card { cursor: default; }
+        .planned-label { display: inline-flex; margin-bottom: 12px; padding: 4px 8px; border: 1px solid rgba(149,227,193,.24); border-radius: 999px; color: var(--mint); background: rgba(149,227,193,.07); font-size: 10px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
         .icon { display: grid; width: 38px; height: 38px; margin-bottom: 19px; place-items: center; border: 1px solid rgba(149,227,193,.28); border-radius: 12px; color: var(--mint); background: linear-gradient(145deg, rgba(149,227,193,.14), rgba(149,227,193,.035)); box-shadow: inset 0 1px rgba(255,255,255,.12), 0 0 20px rgba(149,227,193,.06); }
         .card h3 { margin: 0 0 8px; font-size: 16px; }
         .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
@@ -138,6 +140,34 @@
                     <a class="card feature-card" href="{{ url_for('questions') }}"><div class="icon" aria-hidden="true">?</div><h3>Results Q&amp;A</h3><p>Read plain-language answers about score ranges, biomarker limits, genetic examples, and medical interpretation.</p></a>
                     <a class="card feature-card" href="{{ url_for('home') }}#progression-outlook"><div class="icon" aria-hidden="true">⇩</div><h3>Portable reports</h3><p>Download trend summaries and export saved local trends as CSV.</p></a>
                     <a class="card feature-card" href="{{ url_for('chat') }}"><div class="icon" aria-hidden="true">✧</div><h3>Research assistant</h3><p>Ask general neuroscience questions and get help understanding the app’s tools and limitations.</p></a>
+                </div>
+            </section>
+            <section class="section" aria-labelledby="upcoming-title">
+                <div class="section-head">
+                    <h2 id="upcoming-title">On the roadmap</h2>
+                    <p>Ideas for future tools. These features are planned and are not available in the dashboard yet.</p>
+                </div>
+                <div class="cards">
+                    <article class="card planned-card">
+                        <span class="planned-label">Planned</span>
+                        <h3>Imaging timeline</h3>
+                        <p>Explore MRI and PET report summaries across visits, with dates and source context kept visible.</p>
+                    </article>
+                    <article class="card planned-card">
+                        <span class="planned-label">Planned</span>
+                        <h3>Biomarker comparison</h3>
+                        <p>Organize values by assay, specimen, and units to make report-to-report comparisons easier to review.</p>
+                    </article>
+                    <article class="card planned-card">
+                        <span class="planned-label">Planned</span>
+                        <h3>Symptom journal</h3>
+                        <p>Keep a private timeline of self-reported observations and questions to bring to a care visit.</p>
+                    </article>
+                    <article class="card planned-card">
+                        <span class="planned-label">Planned</span>
+                        <h3>Research study finder</h3>
+                        <p>Browse public neuroscience studies and research resources, without suggesting personal eligibility.</p>
+                    </article>
                 </div>
             </section>
         </main>
