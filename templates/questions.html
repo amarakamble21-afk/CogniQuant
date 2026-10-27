@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='neuroquant-icon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='cogniquant-icon.svg') }}">
     <meta name="theme-color" content="#0b1118">
     <title>Neuroscience Results Q&amp;A | NeuroQuant</title>
     <script>
         try {
-            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            const savedAppearance = JSON.parse(localStorage.getItem('cogniquant.appearance.v1') || localStorage.getItem('neuroquant.appearance.v1') || '{}');
             document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
             document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
         } catch { /* Keep the default appearance when storage is unavailable. */ }
@@ -123,7 +123,7 @@
         const personalized = document.getElementById('patient-questions');
         const numberText = value => typeof value === 'number' && Number.isFinite(value) ? String(value) : 'Not entered';
         try {
-            const snapshot = JSON.parse(sessionStorage.getItem('neuroquant.care-discussion-inputs.v1') || 'null');
+            const snapshot = JSON.parse(sessionStorage.getItem('cogniquant.care-discussion-inputs.v1') || sessionStorage.getItem('neuroquant.care-discussion-inputs.v1') || 'null');
             if (!snapshot || typeof snapshot !== 'object') return;
             const disease = String(snapshot.disease || 'Not specified');
             status.textContent = `Showing values carried from the dashboard for ${disease}. These are the entered values, not a medical interpretation.`;

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='neuroquant-icon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='cogniquant-icon.svg') }}">
     <title>NeuroQuant | Progression Trend Explorer</title>
     <script>
         try {
-            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            const savedAppearance = JSON.parse(localStorage.getItem('cogniquant.appearance.v1') || localStorage.getItem('neuroquant.appearance.v1') || '{}');
             document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
             document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
         } catch { /* Keep the default appearance when storage is unavailable. */ }
@@ -269,13 +269,6 @@
     <h1>Progression Trend Explorer</h1>
     <p class="subtitle">Explore measured clinical-score change over time. Projections are mathematical illustrations, not individual medical forecasts.</p>
 </header>
-<nav class="page-nav" aria-label="Page navigation">
-    <span class="page-nav-label">Research workspace</span>
-    <div class="page-nav-links">
-        <a href="{{ url_for('landing') }}">← Back to landing page</a>
-        <a href="{{ url_for('chat') }}">Open AI assistant</a>
-    </div>
-</nav>
 
 <section class="trend-workspace neuro-card" id="progression-outlook" aria-labelledby="progression-title">
     <div class="simulator-header">
@@ -616,7 +609,8 @@ const treatmentOptions = {
         { id: 'rehabilitation', label: 'Rehabilitation and supportive care', note: 'May support movement, communication, mood, nutrition, and daily needs. No numerical change is applied to this graph.' }
     ]
 };
-const HISTORY_KEY = 'neuroquant.progression.history.v1';
+const HISTORY_KEY = 'cogniquant.progression.history.v1';
+const LEGACY_HISTORY_KEY = 'neuroquant.progression.history.v1';
 let progressionChart = null;
 let featureChart = null;
 let lastTrend = null;
@@ -914,7 +908,7 @@ function prepareCareDiscussionBrief() {
         preparedAt: new Date().toISOString()
     };
     try {
-        sessionStorage.setItem('neuroquant.care-discussion-inputs.v1', JSON.stringify(snapshot));
+        sessionStorage.setItem('cogniquant.care-discussion-inputs.v1', JSON.stringify(snapshot));
         window.location.href = `/interventions?disease=${encodeURIComponent(disease)}`;
     } catch (error) {
         document.getElementById('simulator-validation').textContent =
@@ -1474,7 +1468,7 @@ function downloadTrendReport() {
 
 function loadHistory() {
     try {
-        const stored = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        const stored = JSON.parse(localStorage.getItem(HISTORY_KEY) || localStorage.getItem(LEGACY_HISTORY_KEY) || '[]');
         return Array.isArray(stored) ? stored.filter(entry => entry && scaleInfo[entry.disease]) : [];
     } catch (error) {
         document.getElementById('simulator-validation').textContent = 'Could not read saved trends from this browser.';
@@ -1550,6 +1544,7 @@ function renderHistory() {
 function clearHistory() {
     try {
         localStorage.removeItem(HISTORY_KEY);
+        localStorage.removeItem(LEGACY_HISTORY_KEY);
         renderHistory();
     } catch (error) {
         document.getElementById('simulator-validation').textContent = 'Could not clear saved trends from browser storage.';

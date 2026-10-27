@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='neuroquant-icon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='cogniquant-icon.svg') }}">
     <meta name="theme-color" content="#0b1118">
     <title>Research Assistant | NeuroQuant</title>
     <script>
         try {
-            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            const savedAppearance = JSON.parse(localStorage.getItem('cogniquant.appearance.v1') || localStorage.getItem('neuroquant.appearance.v1') || '{}');
             document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
             document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
         } catch { /* Keep the default appearance when storage is unavailable. */ }

@@ -1,11 +1,12 @@
 (() => {
-    const storageKey = 'neuroquant.appearance.v1';
+    const storageKey = 'cogniquant.appearance.v1';
+    const legacyStorageKey = 'neuroquant.appearance.v1';
     const palettes = ['mint-ocean', 'lavender-plum', 'peach-rose', 'sky-slate'];
     const modes = ['dark', 'light'];
     let appearance = { palette: 'mint-ocean', mode: 'dark' };
 
     try {
-        const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        const stored = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey) || '{}');
         if (palettes.includes(stored.palette)) appearance.palette = stored.palette;
         if (modes.includes(stored.mode)) appearance.mode = stored.mode;
     } catch {
@@ -81,6 +82,6 @@
         } catch (error) {
             console.error('Could not save appearance preferences.', error);
         }
-        document.dispatchEvent(new CustomEvent('neuroquant:appearancechange', { detail: { ...appearance } }));
+        document.dispatchEvent(new CustomEvent('cogniquant:appearancechange', { detail: { ...appearance } }));
     });
 })();

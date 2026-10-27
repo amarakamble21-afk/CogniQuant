@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='neuroquant-icon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='cogniquant-icon.svg') }}">
     <meta name="theme-color" content="#0b1118">
     <title>Care Discussion Estimate | NeuroQuant</title>
     <script>
         try {
-            const savedAppearance = JSON.parse(localStorage.getItem('neuroquant.appearance.v1') || '{}');
+            const savedAppearance = JSON.parse(localStorage.getItem('cogniquant.appearance.v1') || localStorage.getItem('neuroquant.appearance.v1') || '{}');
             document.documentElement.dataset.palette = savedAppearance.palette || 'mint-ocean';
             document.documentElement.dataset.mode = savedAppearance.mode || 'dark';
         } catch { /* Keep the default appearance when storage is unavailable. */ }
@@ -232,8 +232,11 @@
 <script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
 <script>
     (() => {
-        const inputsKey = 'neuroquant.treatment-brief-inputs.v1';
-        const snapshotKey = 'neuroquant.care-discussion-inputs.v1';
+        const inputsKey = 'cogniquant.treatment-brief-inputs.v1';
+        const snapshotKey = 'cogniquant.care-discussion-inputs.v1';
+        const legacyInputsKey = 'neuroquant.treatment-brief-inputs.v1';
+        const legacySnapshotKey = 'neuroquant.care-discussion-inputs.v1';
+        const readSessionValue = (key, legacyKey) => sessionStorage.getItem(key) || sessionStorage.getItem(legacyKey);
         const diseaseSelect = document.getElementById('brief-disease');
         const forms = [...document.querySelectorAll('[data-disease-form]')];
         const results = document.getElementById('brief-results');
@@ -269,7 +272,7 @@
         const isYes = id => read(id) === 'yes';
         function readDashboardSnapshot() {
             try {
-                return JSON.parse(sessionStorage.getItem(snapshotKey) || 'null');
+                return JSON.parse(readSessionValue(snapshotKey, legacySnapshotKey) || 'null');
             } catch (error) {
                 console.error('Could not read local care discussion inputs.', error);
                 return null;
@@ -453,7 +456,7 @@
             const estimateStatus = document.getElementById('patient-estimate-status');
             const reviewPoints = document.getElementById('estimate-review-points');
             try {
-                const snapshot = JSON.parse(sessionStorage.getItem(snapshotKey) || 'null');
+                const snapshot = JSON.parse(readSessionValue(snapshotKey, legacySnapshotKey) || 'null');
                 if (!snapshot || typeof snapshot !== 'object') return;
                 const entries = [];
                 const reviews = [];
@@ -523,7 +526,7 @@
 
         function restoreFormAnswers() {
             try {
-                const saved = JSON.parse(sessionStorage.getItem(inputsKey) || 'null');
+                const saved = JSON.parse(readSessionValue(inputsKey, legacyInputsKey) || 'null');
                 if (!saved || typeof saved !== 'object') return;
                 Object.entries(saved).forEach(([id, value]) => {
                     const input = document.getElementById(id);
@@ -548,7 +551,7 @@
         }
 
         const snapshotKeyPresent = (() => {
-            try { return Boolean(sessionStorage.getItem(snapshotKey)); }
+            try { return Boolean(readSessionValue(snapshotKey, legacySnapshotKey)); }
             catch (error) {
                 inputStatus.textContent = 'Browser tab storage is unavailable. The questionnaire can be used, but dashboard entries cannot be carried into this brief.';
                 console.error('Could not access local care discussion inputs.', error);
@@ -580,7 +583,10 @@
                 document.getElementById('brief-goal').value = '';
                 document.getElementById('brief-medicines').value = '';
                 document.getElementById('brief-question').value = '';
-                try { sessionStorage.removeItem(inputsKey); }
+                try {
+                    sessionStorage.removeItem(inputsKey);
+                    sessionStorage.removeItem(legacyInputsKey);
+                }
                 catch (error) {
                     inputStatus.textContent = 'Could not clear browser-tab storage. Close this tab to remove session-only answers.';
                     console.error('Could not clear local treatment discussion answers.', error);
