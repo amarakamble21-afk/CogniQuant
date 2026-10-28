@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='cogniquant-icon.svg') }}">
     <title>Navigation | NeuroQuant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='neuro-theme.css') }}">
 </head>
 <body style="margin:0; background:#0b1118">
 {% endif %}
@@ -47,5 +48,6 @@
         <div class="sidebar-note"><strong>Research prototype</strong>For educational exploration only. Not for diagnosis or treatment decisions.</div>
     </div>
 </aside>
-{% if request.endpoint == 'panel' %}</body>
+{% if request.endpoint == 'panel' %}<script src="{{ url_for('static', filename='neuro-theme.js') }}"></script>
+</body>
 </html>{% endif %}

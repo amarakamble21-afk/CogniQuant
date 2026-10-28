@@ -69,9 +69,4 @@
         white-space: normal;
     }
 
-    .app-sidebar > .theme-picker .theme-picker-panel {
-        right: auto;
-        left: 0;
-        width: min(260px, calc(100vw - 28px));
-    }
 }

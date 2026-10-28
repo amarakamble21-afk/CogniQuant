@@ -166,8 +166,12 @@ body:has(.workspace-main) .source-tag.warn { color: #f0d99b; background: #2b281b
     background: var(--neuro-bg);
     font: inherit;
 }
-.app-sidebar > .theme-picker { margin: 18px 9px 0; }
-.app-sidebar > .theme-picker .theme-picker-panel { right: auto; left: 0; }
+.app-sidebar > .theme-picker { min-width: 0; margin: 18px 9px 0; }
+.app-sidebar > .theme-picker .theme-picker-panel {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+}
 
 html[data-palette="mint-ocean"][data-mode="dark"] {
     color-scheme: dark;
@@ -196,25 +200,25 @@ html[data-palette="sky-slate"][data-mode="dark"] {
 html[data-palette="mint-ocean"][data-mode="light"] {
     color-scheme: light;
     --palette-bg: #f2f8f5; --palette-surface: #ffffff; --palette-raised: #e5f1eb;
-    --palette-border: #c5d9ce; --palette-text: #1b3028; --palette-muted: #526a60;
+    --palette-border: #c5d9ce; --palette-text: #1b3028; --palette-muted: #40594e;
     --palette-accent: #287a57; --palette-accent-text: #ffffff; --palette-glow: rgba(73,161,117,.13);
 }
 html[data-palette="lavender-plum"][data-mode="light"] {
     color-scheme: light;
     --palette-bg: #f7f4fb; --palette-surface: #ffffff; --palette-raised: #eee7f6;
-    --palette-border: #d5c8e3; --palette-text: #30233e; --palette-muted: #665777;
+    --palette-border: #d5c8e3; --palette-text: #30233e; --palette-muted: #554561;
     --palette-accent: #704a9b; --palette-accent-text: #ffffff; --palette-glow: rgba(142,105,185,.14);
 }
 html[data-palette="peach-rose"][data-mode="light"] {
     color-scheme: light;
     --palette-bg: #fff5f1; --palette-surface: #ffffff; --palette-raised: #f8e8e3;
-    --palette-border: #e8cbc2; --palette-text: #422a2b; --palette-muted: #805c5d;
+    --palette-border: #e8cbc2; --palette-text: #422a2b; --palette-muted: #694849;
     --palette-accent: #a94e49; --palette-accent-text: #ffffff; --palette-glow: rgba(205,115,99,.13);
 }
 html[data-palette="sky-slate"][data-mode="light"] {
     color-scheme: light;
     --palette-bg: #f1f7fb; --palette-surface: #ffffff; --palette-raised: #e6eff5;
-    --palette-border: #c6d7e2; --palette-text: #213746; --palette-muted: #536f80;
+    --palette-border: #c6d7e2; --palette-text: #213746; --palette-muted: #405c6b;
     --palette-accent: #286e91; --palette-accent-text: #ffffff; --palette-glow: rgba(73,145,181,.14);
 }
 html[data-palette][data-mode] {
@@ -254,6 +258,16 @@ html[data-mode="light"] .sidebar-note,
 html[data-mode="light"] .sidebar-links a.active { background: var(--palette-raised); }
 html[data-mode="light"] .sidebar-links a { color: var(--palette-muted); }
 html[data-mode="light"] .sidebar-links a:hover { color: var(--palette-text); background: var(--palette-raised); }
+html[data-mode="light"] .sidebar-label,
+html[data-mode="light"] .sidebar-note { color: var(--palette-muted); }
+html[data-mode="light"] .sidebar-icon { color: var(--palette-accent); }
+html[data-palette][data-mode="light"] .chat-main .topbar {
+    border-color: var(--palette-border);
+    background: var(--palette-surface);
+}
+html[data-palette][data-mode="light"] .chat-main .composer-wrap {
+    background: linear-gradient(transparent, var(--palette-bg) 28%);
+}
 html[data-palette][data-mode="light"] .neuro-card,
 html[data-palette][data-mode="light"] .panel,
 html[data-palette][data-mode="light"] .metric-card,
@@ -269,6 +283,11 @@ html[data-palette][data-mode="light"] .genomics {
 html[data-palette][data-mode="light"] .combined-measure-inputs,
 html[data-palette][data-mode="light"] .combined-trend-figure,
 html[data-palette][data-mode="light"] .disease-overview,
+html[data-palette][data-mode="light"] .biomarker-section,
+html[data-palette][data-mode="light"] .measure-definitions,
+html[data-palette][data-mode="light"] .treatment-note,
+html[data-palette][data-mode="light"] .treatment-reference,
+html[data-palette][data-mode="light"] .variant-trait,
 html[data-palette][data-mode="light"] .range-control,
 html[data-palette][data-mode="light"] .biomarker-slider,
 html[data-palette][data-mode="light"] .genetic-context-slider,
@@ -312,6 +331,51 @@ html[data-palette][data-mode="light"] .metric-sub,
 html[data-palette][data-mode="light"] .lead,
 html[data-palette][data-mode="light"] .intro p,
 html[data-palette][data-mode="light"] .card p { color: var(--palette-muted); }
+html[data-palette][data-mode="light"] .page header > nav,
+html[data-palette][data-mode="light"] footer,
+html[data-palette][data-mode="light"] .clear-button,
+html[data-palette][data-mode="light"] .online,
+html[data-palette][data-mode="light"] .message-meta,
+html[data-palette][data-mode="light"] .composer-note,
+html[data-palette][data-mode="light"] .metric-title,
+html[data-palette][data-mode="light"] table.history th,
+html[data-palette][data-mode="light"] .dataset-reference,
+html[data-palette][data-mode="light"] .biomarker-note,
+html[data-palette][data-mode="light"] .trend-status,
+html[data-palette][data-mode="light"] .simulator-stat,
+html[data-palette][data-mode="light"] .evidence-links,
+html[data-palette][data-mode="light"] .variant-description,
+html[data-palette][data-mode="light"] .variant-trait span,
+html[data-palette][data-mode="light"] .measure-definitions dd { color: var(--palette-muted); }
+html[data-palette][data-mode="light"] textarea::placeholder { color: var(--palette-muted); opacity: 1; }
+html[data-palette][data-mode="light"] .workspace-main label,
+html[data-palette][data-mode="light"] .disease-picker legend,
+html[data-palette][data-mode="light"] .disease-option,
+html[data-palette][data-mode="light"] .disease-option-action,
+html[data-palette][data-mode="light"] .disease-option[aria-pressed="true"] .disease-option-action,
+html[data-palette][data-mode="light"] .range-control label strong,
+html[data-palette][data-mode="light"] .biomarker-slider label strong,
+html[data-palette][data-mode="light"] .measure-definitions dt,
+html[data-palette][data-mode="light"] .change-review,
+html[data-palette][data-mode="light"] .treatment-note strong,
+html[data-palette][data-mode="light"] .treatment-reference strong { color: var(--palette-text); }
+html[data-palette][data-mode="light"] .disease-option[aria-pressed="true"] {
+    border-color: var(--palette-accent);
+    background: var(--palette-raised);
+}
+html[data-palette][data-mode="light"] .range-control output,
+html[data-palette][data-mode="light"] .biomarker-slider output,
+html[data-palette][data-mode="light"] .intervention-control output,
+html[data-palette][data-mode="light"] .simulator-stat strong,
+html[data-palette][data-mode="light"] .variant-trait strong,
+html[data-palette][data-mode="light"] .measure-definitions summary,
+html[data-palette][data-mode="light"] .disease-overview a,
+html[data-palette][data-mode="light"] .disease-sources a,
+html[data-palette][data-mode="light"] .region-info a,
+html[data-palette][data-mode="light"] .treatment-note a,
+html[data-palette][data-mode="light"] .treatment-reference a,
+html[data-palette][data-mode="light"] .evidence-links a { color: var(--palette-accent); }
+html[data-palette][data-mode="light"] .metric-card[data-change-level] #risk-category { color: var(--palette-text); }
 html[data-palette][data-mode="light"] .metric-value,
 html[data-palette][data-mode="light"] .icon,
 html[data-palette][data-mode="light"] .eyebrow,
